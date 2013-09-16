@@ -3,8 +3,6 @@ package binaryImpl;
 import java.io.IOException;
 import java.io.DataOutput;
 
-import dataCollection.ByteBufferArray;
-
 /** {@link ProtocolOutput} implementation wrapper that converting a {@link DataOutput} stream into a
  * {@link ProtocolOutput} stream.
  * It is recommended to encode strings using the {@link ProtocolHandler#STRING_TYPE} type
@@ -452,6 +450,7 @@ public class ProtocolOutputWriter implements ProtocolOutput {
 	}
 
 
+	@SuppressWarnings("unused")
 	private static void writeDataType(DataOutput writer, Object value) throws IOException {
 		if(value instanceof Byte) {
 			writer.writeByte((Byte)value);
