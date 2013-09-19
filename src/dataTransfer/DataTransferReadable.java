@@ -2,11 +2,11 @@ package dataTransfer;
 
 import java.io.IOException;
 
-/** A {@link DataTransferable} interface with the ability to load data from an input stream.
+/** Interface for objects that can be read from an input stream.
  * @author TeamworkGuy2
  * @since 2013-9-18
  */
-public interface DataTransferReadable extends DataTransferable {
+public interface DataTransferReadable {
 
 	/** Initialize this object with data read from the specified
 	 * {@link DataTransferInput} stream.
