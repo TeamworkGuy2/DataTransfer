@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.DataInput;
 import java.util.List;
 
+import dataTransfer.DataHeader;
+
 /** {@link ProtocolInput} implementation wrapper that converts a {@link DataInput} stream into an
  * {@link ProtocolInput} stream.
  * For example a {@link DataInput} stream could be converted to an {@link ProtocolTransferable} object via this code.
@@ -416,7 +418,7 @@ public class ProtocolInputReader implements ProtocolInput {
 		// Allow another method (normally this method's calling method) to then read the block's data
 		// A binary tag in this format has no closing tag, so we do not need to worry about reading that
 
-		ProtocolHeader newHeader = new ProtocolHeaderImpl(blockId);
+		ProtocolHeader newHeader = new ProtocolHeaderImpl(blockId, DataHeader.OPENING);
 		return newHeader;
 	}
 

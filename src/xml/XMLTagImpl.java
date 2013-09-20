@@ -7,14 +7,24 @@ import dataTransfer.DataHeader;
  * @since 2013-8-30
  */
 public class XMLTagImpl implements XMLTag {
-	private String openingTag;
+	private String tagName;
+	private boolean openingHeader;
 
 	/** Create an XML tag block
-	 * @param openingTag the name of the parent XML tag surrounding the XML
+	 * @param tagName the name of the parent XML tag surrounding the XML
 	 * data block that is being described by this XML tag.
+	 * @param openingHeader true if this header represents an opening tag,
+	 * false if it represents a closing header.
 	 */
-	public XMLTagImpl(String openingTag) {
-		this.openingTag = openingTag;
+	public XMLTagImpl(String tagName, boolean openingHeader) {
+		this.tagName = tagName;
+		this.openingHeader = openingHeader;
+	}
+
+
+	@Override
+	public boolean isOpeningHeader() {
+		return openingHeader;
 	}
 
 
@@ -26,32 +36,32 @@ public class XMLTagImpl implements XMLTag {
 
 	@Override
 	public String getHeaderName() {
-		return openingTag;
+		return tagName;
 	}
 
 
 	@Override
 	public boolean equals(Object obj) {
-		boolean result = (obj instanceof DataHeader);
-		if(result == true) {
-			DataHeader header = (DataHeader)obj;
+		if((obj instanceof DataHeader)) {
+			String headerName = ((DataHeader)obj).getHeaderName();
+			int headerId = ((DataHeader)obj).getHeaderId();
+
 			// Check if the header names match
-			if(openingTag != null) {
-				result |= openingTag.equals(header.getHeaderName());
-			}
-			else {
-				result |= (header.getHeaderName() == null);
-			}
-			// Check if this header has the same ID as the other header
-			result |= (-1 == header.getHeaderId());
+			boolean nameMatch = (tagName != null) ? (tagName.equals(headerName)) : (headerName == null);
+			// Check if the header IDs match
+			boolean idMatch = (-1 == headerId);
+
+			// If the names, IDs, or both match and the remaining non matching field has at
+			// least one empty value, then the headers are equal, see {@link DataHeader#equals(Object)}
+			return (nameMatch || idMatch) && !(!nameMatch && -1 < 0) && !(!idMatch && tagName == null);
 		}
-		return result;
+		return false;
 	}
 
 
 	@Override
 	public int hashCode() {
-		return (openingTag != null ? openingTag.hashCode() : 0) ^ -1;
+		return (tagName != null ? tagName.hashCode() : 0) ^ -1;
 	}
 
 }

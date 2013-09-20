@@ -10,6 +10,8 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import dataTransfer.DataHeader;
+
 /** {@link XMLInput} implementation for reading XML text data from an {@link XMLStreamReader}.
  * This class allows XML opening and closing tags to be read as well as strings and basic data types.
  * @author TeamworkGuy2
@@ -240,7 +242,7 @@ public class XMLInputReader implements XMLInput {
 				elementName = reader.getLocalName(); // or .getName().getLocalPart();
 				// Add any closing tags to the list of closing tags
 				if(peek && readTag == XMLStreamConstants.END_ELEMENT) {
-					readClosingTags.add(new XMLTagImpl(elementName));
+					readClosingTags.add(new XMLTagImpl(elementName, DataHeader.OPENING));
 				}
 			}
 			// If we should only check one element at a time, then look for the next opening or closing element
@@ -250,7 +252,7 @@ public class XMLInputReader implements XMLInput {
 					readTag = reader.next();
 					// Add any closing tags to the list of closing tags
 					if(peek && readTag == XMLStreamConstants.END_ELEMENT) {
-						readClosingTags.add(new XMLTagImpl(reader.getLocalName()));
+						readClosingTags.add(new XMLTagImpl(reader.getLocalName(), DataHeader.OPENING));
 					}
 				}
 			}
@@ -263,7 +265,7 @@ public class XMLInputReader implements XMLInput {
 						elementName = reader.getLocalName(); // or .getName().getLocalPart();
 						// Add any closing tags to the list of closing tags
 						if(peek && readTag == XMLStreamConstants.END_ELEMENT) {
-							readClosingTags.add(new XMLTagImpl(elementName));
+							readClosingTags.add(new XMLTagImpl(elementName, DataHeader.OPENING));
 						}
 					}
 				}
@@ -296,7 +298,7 @@ public class XMLInputReader implements XMLInput {
 		// Create the new element, or leave it null if no valid element name was read
 		XMLTag newTag = null;
 		if(elementName != null) {
-			newTag = new XMLTagImpl(elementName);
+			newTag = new XMLTagImpl(elementName, DataHeader.OPENING);
 		}
 		return newTag;
 	}

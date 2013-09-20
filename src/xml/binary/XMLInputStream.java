@@ -8,6 +8,8 @@ import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
+import dataTransfer.DataHeader;
+
 import xml.XMLAttributes;
 import xml.XMLHandler;
 import xml.XMLInput;
@@ -442,7 +444,7 @@ public class XMLInputStream implements XMLInput {
 			}
 
 			// Save the tag in the current XML tag
-			newTag = new XMLTagImpl(tagName);
+			newTag = new XMLTagImpl(tagName, DataHeader.OPENING);
 		} catch(XMLStreamException xmlse) {
 			throw new IOException(xmlse);
 		}
