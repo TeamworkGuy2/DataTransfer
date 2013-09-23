@@ -103,14 +103,15 @@ public class ProtocolHandler {
 	 * stream. Writes the specified tag ID only if the ID is not -1.
 	 * @param id the tag ID to write before writing the array of objects. This
 	 * tag is only written if it is not -1.
+	 * @param descriptor an optional descriptor to write with the objects
 	 * @param objects the array of objects to write to the protocol output stream
 	 * @param output the protocol output stream to write the objects to
 	 * @throws IOException if there is an I/O error writing the objects to the
 	 * protocol output stream
 	 */
-	public static void writeProtocolObjects(int id, ProtocolTransferable[] objects, ProtocolOutput output) throws IOException {
+	public static void writeProtocolObjects(int id, String descriptor, ProtocolTransferable[] objects, ProtocolOutput output) throws IOException {
 		if(id > -1) {
-			output.writeOpeningBlock(id);
+			output.writeOpeningBlock(id, descriptor);
 		}
 
 		int size = objects.length;

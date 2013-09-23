@@ -8,16 +8,20 @@ import dataTransfer.DataHeader;
  */
 public class XMLTagImpl implements XMLTag {
 	private String tagName;
+	private String descriptor;
 	private boolean openingHeader;
 
 	/** Create an XML tag block
 	 * @param tagName the name of the parent XML tag surrounding the XML
 	 * data block that is being described by this XML tag.
+	 * @param descriptor an optional descriptor for this XML tag, or null if
+	 * it does not have a descriptor.
 	 * @param openingHeader true if this header represents an opening tag,
 	 * false if it represents a closing header.
 	 */
-	public XMLTagImpl(String tagName, boolean openingHeader) {
+	public XMLTagImpl(String tagName, String descriptor, boolean openingHeader) {
 		this.tagName = tagName;
+		this.descriptor = descriptor;
 		this.openingHeader = openingHeader;
 	}
 
@@ -29,14 +33,20 @@ public class XMLTagImpl implements XMLTag {
 
 
 	@Override
+	public String getHeaderName() {
+		return tagName;
+	}
+
+
+	@Override
 	public int getHeaderId() {
 		return -1;
 	}
 
 
 	@Override
-	public String getHeaderName() {
-		return tagName;
+	public String getDescriptor() {
+		return descriptor;
 	}
 
 

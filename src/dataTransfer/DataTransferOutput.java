@@ -18,6 +18,7 @@ public interface DataTransferOutput extends Closeable {
 	 */
 	public void write(int id, String name, byte[] b) throws IOException;
 
+
 	/** Write a byte array with the specified element name
 	 * @param id the id of the element to write
 	 * @param name the name of the element to write
@@ -28,6 +29,7 @@ public interface DataTransferOutput extends Closeable {
 	 */
 	public void write(int id, String name, byte[] b, int off, int len) throws IOException;
 
+
 	/** Write a boolean value with the specified element name
 	 * @param id the id of the element to write
 	 * @param name the name of the element to write
@@ -35,6 +37,7 @@ public interface DataTransferOutput extends Closeable {
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
 	public void writeBoolean(int id, String name, boolean v) throws IOException;
+
 
 	/** Write a byte with the specified element name
 	 * @param id the id of the element to write
@@ -44,6 +47,7 @@ public interface DataTransferOutput extends Closeable {
 	 */
 	public void writeByte(int id, String name, byte v) throws IOException;
 
+
 	/** Write a char with the specified element name
 	 * @param id the id of the element to write
 	 * @param name the name of the element to write
@@ -51,6 +55,7 @@ public interface DataTransferOutput extends Closeable {
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
 	public void writeChar(int id, String name, char v) throws IOException;
+
 
 	/** Write a double with the specified element name
 	 * @param id the id of the element to write
@@ -60,6 +65,7 @@ public interface DataTransferOutput extends Closeable {
 	 */
 	public void writeDouble(int id, String name, double v) throws IOException;
 
+
 	/** Write a float with the specified element name
 	 * @param id the id of the element to write
 	 * @param name the name of the element to write
@@ -67,6 +73,7 @@ public interface DataTransferOutput extends Closeable {
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
 	public void writeFloat(int id, String name, float v) throws IOException;
+
 
 	/** Write an integer with the specified element name
 	 * @param id the id of the element to write
@@ -76,6 +83,7 @@ public interface DataTransferOutput extends Closeable {
 	 */
 	public void writeInt(int id, String name, int v) throws IOException;
 
+
 	/** Write a long with the specified element name
 	 * @param id the id of the element to write
 	 * @param name the name of the element to write
@@ -83,6 +91,7 @@ public interface DataTransferOutput extends Closeable {
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
 	public void writeLong(int id, String name, long v) throws IOException;
+
 
 	/** Write a short with the specified element name
 	 * @param id the id of the element to write
@@ -92,6 +101,7 @@ public interface DataTransferOutput extends Closeable {
 	 */
 	public void writeShort(int id, String name, short v) throws IOException;
 
+
 	/** Write a String with the specified element name
 	 * @param id the id of the element to write
 	 * @param name the name of the element to write
@@ -100,13 +110,25 @@ public interface DataTransferOutput extends Closeable {
 	 */
 	public void writeUTF(int id, String name, String s) throws IOException;
 
+
 	/** Write an opening block tag and add a corresponding block tag to this
 	 * writer's internal list of open block tags
-	 * @param id the block's identifier
-	 * @param name the name of the element to write
+	 * @param id the block's type ID
+	 * @param name the name of the block
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
 	public void writeOpeningBlock(int id, String name) throws IOException;
+
+
+	/** Write an opening block tag and add a corresponding block tag to this
+	 * writer's internal list of open block tags
+	 * @param id the block's type ID
+	 * @param name the name of the block
+	 * @param descriptor an optional descriptor to associate with the block tag, or null for a generic block
+	 * @throws IOException if there is an IO error writing to the output stream
+	 */
+	public void writeOpeningBlock(int id, String name, String descriptor) throws IOException;
+
 
 	/** Write a closing block tag for the last written opening block tag, this
 	 * completes a block

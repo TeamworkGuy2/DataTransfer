@@ -9,16 +9,19 @@ import dataTransfer.DataHeader;
  */
 public class ProtocolHeaderImpl implements ProtocolHeader {
 	private int tagId;
+	private String descriptor;
 	private boolean openingHeader;
 
 	/** Create a protocol header with the specified ID.
 	 * @param tagId a protocol header ID between [0, Integer#MAX_VALUE]
 	 * that represents the identifier of a protocol data block.
+	 * @param descriptor an optional descriptor of the element, null if it does not have one
 	 * @param openingHeader true if this header represents an opening data block,
 	 * false if it represents a closing data block.
 	 */
-	public ProtocolHeaderImpl(int tagId, boolean openingHeader) {
+	public ProtocolHeaderImpl(int tagId, String descriptor, boolean openingHeader) {
 		this.tagId = (tagId < 0 ? -1 : tagId);
+		this.descriptor = descriptor;
 		this.openingHeader = openingHeader;
 	}
 
@@ -30,14 +33,20 @@ public class ProtocolHeaderImpl implements ProtocolHeader {
 
 
 	@Override
+	public String getHeaderName() {
+		return null;
+	}
+
+
+	@Override
 	public int getHeaderId() {
 		return tagId;
 	}
 
 
 	@Override
-	public String getHeaderName() {
-		return null;
+	public String getDescriptor() {
+		return descriptor;
 	}
 
 

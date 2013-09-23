@@ -10,6 +10,14 @@ import java.io.IOException;
  */
 public interface DataTransferableFactory<T> {
 
+	/** Method to query whether this factory supports the reloading of objects
+	 * via the {@link #readData(DataTransferInput, Object)} method.
+	 * @return true if {@link #readData(DataTransferInput, Object)} is
+	 * supported by this factory implementation, false if it is not supported.
+	 */
+	public boolean canReloadObjects();
+
+
 	/** Write the specified object to the specified {@link DataTransferOutput} stream.
 	 * @param outputStream the data output stream to write the data to
 	 * @param obj the object to write
@@ -26,14 +34,6 @@ public interface DataTransferableFactory<T> {
 	 * @throws IOException if there is an error reading data from the input stream
 	 */
 	public T readData(DataTransferInput inputStream) throws IOException;
-
-
-	/** Method to query whether this factory supports the reloading of objects
-	 * via the {@link #readData(DataTransferInput, Object)} method.
-	 * @return true if {@link #readData(DataTransferInput, Object)} is
-	 * supported by this factory implementation, false if it is not supported.
-	 */
-	public boolean canReloadObjects();
 
 
 	/** Read data from the specified {@link DataTransferInput} stream into the

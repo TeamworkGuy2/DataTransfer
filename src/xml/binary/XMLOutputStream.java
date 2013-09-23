@@ -147,158 +147,170 @@ public class XMLOutputStream implements XMLOutput {
 
 	@Override
 	public void write(String name, byte[] b) throws IOException {
-		writeTag(name, false, XMLHandler.BYTE_TYPE | XMLHandler.ARRAY_TYPE, b.length);
+		writeTag(name, null, false, XMLHandler.BYTE_TYPE | XMLHandler.ARRAY_TYPE, b.length);
 		out.write(b, 0, b.length);
 	}
 
 	@Override
 	public void write(String name, byte[] b, XMLAttributes attributes) throws IOException {
-		writeTag(name, attributes, false, XMLHandler.BYTE_TYPE | XMLHandler.ARRAY_TYPE, b.length);
+		writeTag(name, null, attributes, false, XMLHandler.BYTE_TYPE | XMLHandler.ARRAY_TYPE, b.length);
 		out.write(b, 0, b.length);
 	}
 
 	@Override
 	public void write(String name, byte[] b, int off, int len) throws IOException {
-		writeTag(name, false, XMLHandler.BYTE_TYPE | XMLHandler.ARRAY_TYPE, len);
+		writeTag(name, null, false, XMLHandler.BYTE_TYPE | XMLHandler.ARRAY_TYPE, len);
 		out.write(b, off, len);
 	}
 
 	@Override
 	public void write(String name, byte[] b, int off, int len, XMLAttributes attributes) throws IOException {
-		writeTag(name, attributes, false, XMLHandler.BYTE_TYPE | XMLHandler.ARRAY_TYPE, len);
+		writeTag(name, null, attributes, false, XMLHandler.BYTE_TYPE | XMLHandler.ARRAY_TYPE, len);
 		out.write(b, off, len);
 	}
 
 	@Override
 	public void writeBoolean(String name, boolean v) throws IOException {
-		writeTag(name, false, XMLHandler.BOOLEAN_TYPE, 0);
+		writeTag(name, null, false, XMLHandler.BOOLEAN_TYPE, 0);
 		out.writeBoolean(v);
 	}
 
 	@Override
 	public void writeBoolean(String name, boolean v, XMLAttributes attributes) throws IOException {
-		writeTag(name, attributes, false, XMLHandler.BOOLEAN_TYPE, 0);
+		writeTag(name, null, attributes, false, XMLHandler.BOOLEAN_TYPE, 0);
 		out.writeBoolean(v);
 	}
 
 	@Override
 	public void writeByte(String name, byte v) throws IOException {
-		writeTag(name, false, XMLHandler.BYTE_TYPE, 0);
+		writeTag(name, null, false, XMLHandler.BYTE_TYPE, 0);
 		out.writeByte(v);
 	}
 
 	@Override
 	public void writeByte(String name, byte v, XMLAttributes attributes) throws IOException {
-		writeTag(name, attributes, false, XMLHandler.BYTE_TYPE, 0);
+		writeTag(name, null, attributes, false, XMLHandler.BYTE_TYPE, 0);
 		out.writeByte(v);
 	}
 
 	@Override
 	public void writeChar(String name, char v) throws IOException {
-		writeTag(name, false, XMLHandler.CHAR_TYPE, 0);
+		writeTag(name, null, false, XMLHandler.CHAR_TYPE, 0);
 		out.writeChar(v);
 	}
 
 	@Override
 	public void writeChar(String name, char v, XMLAttributes attributes) throws IOException {
-		writeTag(name, attributes, false, XMLHandler.CHAR_TYPE, 0);
+		writeTag(name, null, attributes, false, XMLHandler.CHAR_TYPE, 0);
 		out.writeChar(v);
 	}
 
 	@Override
 	public void writeDouble(String name, double v) throws IOException {
-		writeTag(name, false, XMLHandler.DOUBLE_TYPE, 0);
+		writeTag(name, null, false, XMLHandler.DOUBLE_TYPE, 0);
 		out.writeDouble(v);
 	}
 
 	@Override
 	public void writeDouble(String name, double v, XMLAttributes attributes) throws IOException {
-		writeTag(name, attributes, false, XMLHandler.DOUBLE_TYPE, 0);
+		writeTag(name, null, attributes, false, XMLHandler.DOUBLE_TYPE, 0);
 		out.writeDouble(v);
 	}
 
 	@Override
 	public void writeFloat(String name, float v) throws IOException {
-		writeTag(name, false, XMLHandler.FLOAT_TYPE, 0);
+		writeTag(name, null, false, XMLHandler.FLOAT_TYPE, 0);
 		out.writeFloat(v);
 	}
 
 	@Override
 	public void writeFloat(String name, float v, XMLAttributes attributes) throws IOException {
-		writeTag(name, attributes, false, XMLHandler.FLOAT_TYPE, 0);
+		writeTag(name, null, attributes, false, XMLHandler.FLOAT_TYPE, 0);
 		out.writeFloat(v);
 	}
 
 	@Override
 	public void writeInt(String name, int v) throws IOException {
-		writeTag(name, false, XMLHandler.INT_TYPE, 0);
+		writeTag(name, null, false, XMLHandler.INT_TYPE, 0);
 		out.writeInt(v);
 	}
 
 	@Override
 	public void writeInt(String name, int v, XMLAttributes attributes) throws IOException {
-		writeTag(name, attributes, false, XMLHandler.INT_TYPE, 0);
+		writeTag(name, null, attributes, false, XMLHandler.INT_TYPE, 0);
 		out.writeInt(v);
 	}
 
 	@Override
 	public void writeLong(String name, long v) throws IOException {
-		writeTag(name, false, XMLHandler.LONG_TYPE, 0);
+		writeTag(name, null, false, XMLHandler.LONG_TYPE, 0);
 		out.writeLong(v);
 	}
 
 	@Override
 	public void writeLong(String name, long v, XMLAttributes attributes) throws IOException {
-		writeTag(name, attributes, false, XMLHandler.LONG_TYPE, 0);
+		writeTag(name, null, attributes, false, XMLHandler.LONG_TYPE, 0);
 		out.writeLong(v);
 	}
 
 	@Override
 	public void writeShort(String name, short v) throws IOException {
-		writeTag(name, false, XMLHandler.SHORT_TYPE, 0);
+		writeTag(name, null, false, XMLHandler.SHORT_TYPE, 0);
 		out.writeShort(v);
 	}
 
 	@Override
 	public void writeShort(String name, short v, XMLAttributes attributes) throws IOException {
-		writeTag(name, attributes, false, XMLHandler.SHORT_TYPE, 0);
+		writeTag(name, null, attributes, false, XMLHandler.SHORT_TYPE, 0);
 		out.writeShort(v);
 	}
 
 	@Override
 	public void writeUTF(String name, String s) throws IOException {
-		writeTag(name, false, XMLHandler.STRING_TYPE, 0);
+		writeTag(name, null, false, XMLHandler.STRING_TYPE, 0);
 		out.writeUTF(s);
 	}
 
 	@Override
 	public void writeUTF(String name, String s, XMLAttributes attributes) throws IOException {
-		writeTag(name, attributes, false, XMLHandler.STRING_TYPE, 0);
+		writeTag(name, null, attributes, false, XMLHandler.STRING_TYPE, 0);
 		out.writeUTF(s);
 	}
 
 	@Override
 	public void writeOpeningBlock(String name) throws IOException {
-		writeTag(name, true, XMLHandler.NO_TYPE, 0);
+		writeTag(name, null, true, XMLHandler.NO_TYPE, 0);
 	}
 
 	@Override
 	public void writeOpeningBlock(String name, XMLAttributes attributes) throws IOException {
-		writeTag(name, attributes, true, XMLHandler.NO_TYPE, 0);
+		writeTag(name, null, attributes, true, XMLHandler.NO_TYPE, 0);
+	}
+
+
+	@Override
+	public void writeOpeningBlock(String name, String descriptor) throws IOException {
+		writeTag(name, descriptor, true, XMLHandler.NO_TYPE, 0);
+	}
+
+	@Override
+	public void writeOpeningBlock(String name, String descriptor, XMLAttributes attributes) throws IOException {
+		writeTag(name, descriptor, attributes, true, XMLHandler.NO_TYPE, 0);
 	}
 
 
 	/** Write an XML tag with the specified nested value
-	 * @param name - the name of the XML tag to write
-	 * @param nested - true indicates that the tag being written will contain nested tags, false indicates that the tag will contain
+	 * @param name the name of the XML tag to write
+	 * @param descriptor an optional descriptor to write with the tag
+	 * @param nested true indicates that the tag being written will contain nested tags, false indicates that the tag will contain
 	 * element data
-	 * @param dataType - the data type of the the XML element, should be from {@link XMLHandler}, such as {@link XMLHandler.BYTE_TYPE}
+	 * @param dataType the data type of the the XML element, should be from {@link XMLHandler}, such as {@link XMLHandler.BYTE_TYPE}
 	 * can be ORed with {@link XMLHandler.ARRAY_TYPE} to indicate that the data is an array of its type.
-	 * @param arrayLength - only useful if the data type is an array type, specifics the length of the data array to be stored in
+	 * @param arrayLength only useful if the data type is an array type, specifics the length of the data array to be stored in
 	 * this element
 	 * @throws IOException if there is an error writing the XML data to the data output
 	 */
-	private void writeTag(String name, boolean nested, int dataType, int arrayLength) throws IOException {
+	private void writeTag(String name, String descriptor, boolean nested, int dataType, int arrayLength) throws IOException {
 		DataOutput write = out;
 
 		// Create the tag's format info byte
@@ -322,7 +334,9 @@ public class XMLOutputStream implements XMLOutput {
 		}
 
 		// Write the tag's name
-		write.writeUTF(name);
+		if(name != null) {
+			write.writeUTF(name);
+		}
 
 		//System.out.println("Write tag: " + name + ", attribs: " + 0 + "(0), nested: " + nested + ", data: " + dataType + "(" + arrayLengthByteCount + ")");
 
@@ -332,17 +346,19 @@ public class XMLOutputStream implements XMLOutput {
 
 
 	/** Write an XML tag with the specified nested value
-	 * @param name - the name of the XML tag to write
-	 * @param attributes - the attributes to add to the tag
-	 * @param nested - true indicates that the tag being written will contain nested tags, false indicates that the tag will contain
+	 * FIXME add descriptor
+	 * @param name the name of the XML tag to write
+	 * @param descriptor an optional descriptor to write with this tag
+	 * @param attributes the attributes to add to the tag
+	 * @param nested true indicates that the tag being written will contain nested tags, false indicates that the tag will contain
 	 * element data
-	 * @param dataType - the data type of the the XML element, should be from {@link XMLHandler}, such as {@link XMLHandler.BYTE_TYPE}
+	 * @param dataType the data type of the the XML element, should be from {@link XMLHandler}, such as {@link XMLHandler.BYTE_TYPE}
 	 * can be ORed with {@link XMLHandler.ARRAY_TYPE} to indicate that the data is an array of its type.
-	 * @param arrayLength - only useful if the data type is an array type, specifics the length of the data array to be stored in
+	 * @param arrayLength only useful if the data type is an array type, specifics the length of the data array to be stored in
 	 * this element
 	 * @throws IOException if there is an error writing the XML data to the data output
 	 */
-	private void writeTag(String name, XMLAttributes attributes, boolean nested, int dataType, int arrayLength) throws IOException {
+	private void writeTag(String name, String descriptor, XMLAttributes attributes, boolean nested, int dataType, int arrayLength) throws IOException {
 		DataOutput write = out;
 		List<String> attributeNames = attributes.getAttributeNames();
 		List<Object> attributeValues = attributes.getAttributeValues();
@@ -396,7 +412,9 @@ public class XMLOutputStream implements XMLOutput {
 		}
 
 		// Write the tag name
-		write.writeUTF(name);
+		if(name != null) {
+			write.writeUTF(name);
+		}
 
 		//System.out.println("Write tag: " + name + ", attribs: " + attribCount + "(" + byteCount + "), nested: " + nested + ", data: " + dataType + "(" + dataByteCount + ")");
 

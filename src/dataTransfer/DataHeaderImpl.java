@@ -7,16 +7,19 @@ package dataTransfer;
 public class DataHeaderImpl implements DataHeader {
 	private final String name;
 	private final int id;
+	private final String descriptor;
 	private final boolean openingHeader;
 
 	/** Create a simple data header containing a name and ID.
 	 * @param name the name of the data header
 	 * @param id the integer ID of the data header
+	 * @param descriptor an optional descriptor to associate with this data header
 	 * @param openingHeader true if this header represents an opening header, false if it represents a closing header
 	 */
-	public DataHeaderImpl(String name, int id, boolean openingHeader) {
+	public DataHeaderImpl(String name, int id, String descriptor, boolean openingHeader) {
 		this.name = name;
 		this.id = (id < 0 ? -1 : id);
+		this.descriptor = descriptor;
 		this.openingHeader = openingHeader;
 	}
 
@@ -39,19 +42,17 @@ public class DataHeaderImpl implements DataHeader {
 
 
 	@Override
+	public String getDescriptor() {
+		return descriptor;
+	}
+
+
+	@Override
 	public boolean equals(Object obj) {
 		boolean result = false;
 		if((obj instanceof DataHeader)) {
-			DataHeader header = (DataHeader)obj;
-			// Check if the header names match
-			if(name != null) {
-				result |= name.equals(header.getHeaderName());
-			}
-			else {
-				result |= (header.getHeaderName() == null);
-			}
-			// Check if this header has the same ID as the other header
-			result |= (id == header.getHeaderId());
+			DataHeader b = (DataHeader)obj;
+			return equals(this.name, this.id, b.getHeaderName(), b.getHeaderId());
 		}
 		return result;
 	}
@@ -69,14 +70,7 @@ public class DataHeaderImpl implements DataHeader {
 	 * @return true if the two data header's are equal, false otherwise
 	 */
 	public static boolean equals(DataHeader a, DataHeader b) {
-		// Check if the header names match
-		boolean nameMatch = (a.getHeaderName() != null) ? a.getHeaderName().equals(b.getHeaderName()) : (b.getHeaderName() == null);
-		// Check if the header IDs match
-		boolean idMatch = (a.getHeaderId() == b.getHeaderId());
-
-		// If the names, IDs, or both match and the remaining non matching field has at
-		// least one empty value, then the headers are equal, see {@link DataHeader#equals(Object)}
-		return (nameMatch || idMatch) && !(!nameMatch && a.getHeaderId() < 0) && !(!idMatch && a.getHeaderName() == null);
+		return equals(a.getHeaderName(), a.getHeaderId(), b.getHeaderName(), b.getHeaderId());
 	}
 
 

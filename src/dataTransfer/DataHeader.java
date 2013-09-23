@@ -23,15 +23,23 @@ public interface DataHeader {
 
 
 	/**
-	 * @return this data header's ID between [0, Integer.MAX_VALUE], or -1 if
-	 * it does not have an ID.
+	 * @return this data header's type ID between [0, Integer.MAX_VALUE], or -1
+	 * if it does not have an ID.
 	 */
 	public int getHeaderId();
 
 
+	/**
+	 * @return an optional descriptor associated with this header,
+	 * or null if this header does not have a descriptor.
+	 */
+	public String getDescriptor();
+
+
 	/** Check if two data headers are equal. Two data headers are equal if both
-	 * their names and IDs are equal or either of their names or IDs are empty
-	 * and the remaining value (name or ID) are equal.<br/>
+	 * their names and IDs are equal or either of their names or IDs are
+	 * empty and the remaining value (name or ID) are equal.<br/>
+	 * Data header descriptors do not matter when comparing data headers.<br/>
 	 * For example, two headers:<br/>
 	 * <table border="1">
 	 * <tr><td>header 1</td><td>header 2</td><td>equals</td></tr>

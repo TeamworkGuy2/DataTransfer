@@ -169,11 +169,13 @@ public class ProtocolOutputWriter implements ProtocolOutput {
 		this.output = null;
 	}
 
+
 	@Override
 	public void write(int id, byte[] b) throws IOException {
 		writeElement(id, ProtocolHandler.BYTE_TYPE | ProtocolHandler.ARRAY_TYPE, b.length);
 		dataBuf.write(b, 0, b.length);
 	}
+
 
 	@Override
 	public void write(int id, byte[] b, int off, int len) throws IOException {
@@ -181,11 +183,13 @@ public class ProtocolOutputWriter implements ProtocolOutput {
 		dataBuf.write(b, off, len);
 	}
 
+
 	@Override
 	public void writeBoolean(int id, boolean v) throws IOException {
 		writeElement(id, ProtocolHandler.BOOLEAN_TYPE, 0);
 		dataBuf.writeBoolean(v);
 	}
+
 
 	@Override
 	public void writeByte(int id, byte v) throws IOException {
@@ -193,11 +197,13 @@ public class ProtocolOutputWriter implements ProtocolOutput {
 		dataBuf.writeByte(v);
 	}
 
+
 	@Override
 	public void writeChar(int id, char v) throws IOException {
 		writeElement(id, ProtocolHandler.CHAR_TYPE, 0);
 		dataBuf.writeChar(v);
 	}
+
 
 	@Override
 	public void writeDouble(int id, double v) throws IOException {
@@ -205,11 +211,13 @@ public class ProtocolOutputWriter implements ProtocolOutput {
 		dataBuf.writeDouble(v);
 	}
 
+
 	@Override
 	public void writeFloat(int id, float v) throws IOException {
 		writeElement(id, ProtocolHandler.FLOAT_TYPE, 0);
 		dataBuf.writeFloat(v);
 	}
+
 
 	@Override
 	public void writeInt(int id, int v) throws IOException {
@@ -217,11 +225,13 @@ public class ProtocolOutputWriter implements ProtocolOutput {
 		dataBuf.writeInt(v);
 	}
 
+
 	@Override
 	public void writeLong(int id, long v) throws IOException {
 		writeElement(id, ProtocolHandler.LONG_TYPE, 0);
 		dataBuf.writeLong(v);
 	}
+
 
 	@Override
 	public void writeShort(int id, short v) throws IOException {
@@ -229,15 +239,23 @@ public class ProtocolOutputWriter implements ProtocolOutput {
 		dataBuf.writeShort(v);
 	}
 
+
 	@Override
 	public void writeUTF(int id, String s) throws IOException {
 		writeElement(id, ProtocolHandler.STRING_TYPE, 0);
 		dataBuf.writeUTF(s);
 	}
 
+
 	@Override
 	public void writeOpeningBlock(int id) throws IOException {
-		writeBlockTag(id);
+		writeBlockTag(id, null);
+	}
+
+
+	@Override
+	public void writeOpeningBlock(int id, String name) throws IOException {
+		writeBlockTag(id, name);
 	}
 
 
@@ -286,9 +304,10 @@ public class ProtocolOutputWriter implements ProtocolOutput {
 
 	/** Write a data block tag
 	 * @param id the identifier of the block
+	 * @param descriptor an optional descriptor to associate with the block tag to write
 	 * @throws IOException if there is an error writing the data to the data output stream
 	 */
-	private void writeBlockTag(int id) throws IOException {
+	private void writeBlockTag(int id, String descriptor) throws IOException {
 		if(id < 0) {
 			throw new IllegalArgumentException("Protocol block ID must be a positive value");
 		}
@@ -319,13 +338,20 @@ public class ProtocolOutputWriter implements ProtocolOutput {
 
 		// Write the block's format data
 		byte idBytes = sizeByteCount(id);
+		byte dataType = (byte)((descriptor != null) ? ProtocolHandler.STRING_TYPE : ProtocolHandler.NO_TYPE); // the block name is a string
 		byte elementCountBytes = 3; // assume the length is maximum sizeByteCount(length);
 		byte blockTag = createBlockTag(idBytes, elementCountBytes, true);
 		write.writeByte(blockTag);
+		write.writeByte(dataType);
 		writeVariableInt(write, id, idBytes);
 		writeVariableInt(write, 0, elementCountBytes); // Write nothing, fill in the actual length later
 		currentBlockId = id;
 		currentElementsWritten = 0;
+
+		// Write the block name
+		if(descriptor != null) {
+			write.writeUTF(descriptor);
+		}
 
 		// Add the new stack info data to the stack, some of the values will
 		// be filled in later when the block closing tag is written

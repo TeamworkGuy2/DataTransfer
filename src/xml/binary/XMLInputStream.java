@@ -299,7 +299,7 @@ public class XMLInputStream implements XMLInput {
 
 
 	@Override
-	public void readOpeningBlock(String name) throws IOException {
+	public XMLTag readOpeningBlock(String name) throws IOException {
 		XMLTag tag = null;
 		// If the next header has not been read (peeked at), read the next header
 		if(peekHeader == null) {
@@ -324,11 +324,12 @@ public class XMLInputStream implements XMLInput {
 		}
 		String tagName = tag.getHeaderName();
 		if(!name.equals(tagName)) { throwTagMissmatchException(name, tagName); }
+		return lastOpeningTag;
 	}
 
 
 	@Override
-	public XMLTag readOpeningBlock() throws IOException {
+	public XMLTag readNextBlock() throws IOException {
 		// If the next header has not been read (peeked at), read the next header
 		if(peekHeader == null) {
 			this.lastOpeningTag = readTag(in, attributeStack, tagDataTypeAndArrayLength, tempAttributeList, true);
@@ -353,6 +354,48 @@ public class XMLInputStream implements XMLInput {
 	}
 
 
+	@Override
+	public XMLTag peekNextBlock() throws IOException {
+		/* If the next header has not been read, peek and read it
+		 * The rest of the code saves the current head values and restores them
+		 * after {@link #readTag(boolean)} is called since that method
+		 * overwrites the current header values, so when it returns we save
+		 * the current header values to our custom peek header variables
+		 * and restore the current header values using the temp variables we
+		 * saved them in.
+		 * This basically hides the peek header from other methods such as
+		 * {@link #getCurrentHeaderBlockAttributes()} or {@link #getCurrentHeaderBlock()}.
+		 */
+		if(peekHeader == null) {
+			XMLTag tempHeader = lastOpeningTag;
+			XMLAttributes tempAttributes = attributeStack;
+			int[] tempDataTypeAndArrayLength = tagDataTypeAndArrayLength;
+			tagDataTypeAndArrayLength = peekTagDataTypeAndArrayLength;
+			peekTagDataTypeAndArrayLength = tempDataTypeAndArrayLength;
+			lastOpeningTag = peekHeader;
+			attributeStack = peekAttributeStack;
+			// Read the next header tag
+			readTag(in, attributeStack, tagDataTypeAndArrayLength, tempAttributeList, true);
+			// Set the peek header to the values read by {@link #readTag(boolean)}
+			peekHeader = lastOpeningTag;
+			peekAttributeStack = attributeStack;
+			peekTagDataTypeAndArrayLength = tagDataTypeAndArrayLength;
+			// Reset the values set by {@link #readTag(boolean)} to the saved previous values
+			lastOpeningTag = tempHeader;
+			attributeStack = tempAttributes;
+			tagDataTypeAndArrayLength = tempDataTypeAndArrayLength;
+		}
+		// Return the peek header
+		return peekHeader;
+	}
+
+
+	/** Read an XML tag
+	 * @param shouldContainNested true to read a tag containing nested tags,
+	 * false to read a leaf/child tag
+	 * @return the name of the tag read
+	 * @throws IOException if there is an error reading the XML tag
+	 */
 	private String readTagElement(boolean shouldContainNested) throws IOException {
 		XMLTag tag = readTag(in, attributeStack, tagDataTypeAndArrayLength, tempAttributeList, shouldContainNested);
 		return tag.getHeaderName();
@@ -444,7 +487,7 @@ public class XMLInputStream implements XMLInput {
 			}
 
 			// Save the tag in the current XML tag
-			newTag = new XMLTagImpl(tagName, DataHeader.OPENING);
+			newTag = new XMLTagImpl(tagName, null, DataHeader.OPENING);
 		} catch(XMLStreamException xmlse) {
 			throw new IOException(xmlse);
 		}
@@ -465,44 +508,8 @@ public class XMLInputStream implements XMLInput {
 
 
 	@Override
-	public XMLTag getCurrentHeaderBlock() {
+	public XMLTag getCurrentBlockHeader() {
 		return lastOpeningTag;
-	}
-
-
-	@Override
-	public XMLTag peekNextHeaderBlock() throws IOException {
-		/* If the next header has not been read, peek and read it
-		 * The rest of the code saves the current head values and restores them
-		 * after {@link #readTag(boolean)} is called since that method
-		 * overwrites the current header values, so when it returns we save
-		 * the current header values to our custom peek header variables
-		 * and restore the current header values using the temp variables we
-		 * saved them in.
-		 * This basically hides the peek header from other methods such as
-		 * {@link #getCurrentHeaderBlockAttributes()} or {@link #getCurrentHeaderBlock()}.
-		 */
-		if(peekHeader == null) {
-			XMLTag tempHeader = lastOpeningTag;
-			XMLAttributes tempAttributes = attributeStack;
-			int[] tempDataTypeAndArrayLength = tagDataTypeAndArrayLength;
-			tagDataTypeAndArrayLength = peekTagDataTypeAndArrayLength;
-			peekTagDataTypeAndArrayLength = tempDataTypeAndArrayLength;
-			lastOpeningTag = peekHeader;
-			attributeStack = peekAttributeStack;
-			// Read the next header tag
-			readTag(in, attributeStack, tagDataTypeAndArrayLength, tempAttributeList, true);
-			// Set the peek header to the values read by {@link #readTag(boolean)}
-			peekHeader = lastOpeningTag;
-			peekAttributeStack = attributeStack;
-			peekTagDataTypeAndArrayLength = tagDataTypeAndArrayLength;
-			// Reset the values set by {@link #readTag(boolean)} to the saved previous values
-			lastOpeningTag = tempHeader;
-			attributeStack = tempAttributes;
-			tagDataTypeAndArrayLength = tempDataTypeAndArrayLength;
-		}
-		// Return the peek header
-		return peekHeader;
 	}
 
 
@@ -546,68 +553,6 @@ public class XMLInputStream implements XMLInput {
 			return reader.readChar();
 		case (byte)XMLHandler.STRING_TYPE:
 			return reader.readUTF();
-		default:
-			throw new IllegalStateException("Cannot read XML binary value with no data type");
-		}
-	}
-
-
-	/** Read an array of the specified data type from the specified DataInput stream
-	 * @param reader - the DataInput stream to read the data type from
-	 * @param dataType - the data type as defined in XMLHandler, such as XMLHandler.BYTE_TYPE
-	 * @param arrayLength - the number of data values to read
-	 * @param values - the list of objects to add the data values to
-	 * @throws IOException if there is an error reading the DataInput stream
-	 */
-	@SuppressWarnings("unused")
-	private static void readDataTypeArray(DataInput reader, int dataType, int arrayLength, List<Object> values) throws IOException {
-		// Read the data type's value
-		switch(dataType) {
-		case (byte)XMLHandler.BYTE_TYPE:
-			for(int a = 0; a < arrayLength; a++) {
-				values.add(reader.readByte());
-			}
-		break;
-		case (byte)XMLHandler.SHORT_TYPE:
-			for(int a = 0; a < arrayLength; a++) {
-				values.add(reader.readShort());
-			}
-		break;
-		case (byte)XMLHandler.INT_TYPE:
-			for(int a = 0; a < arrayLength; a++) {
-				values.add(reader.readInt());
-			}
-		break;
-		case (byte)XMLHandler.LONG_TYPE:
-			for(int a = 0; a < arrayLength; a++) {
-				values.add(reader.readLong());
-			}
-		break;
-		case (byte)XMLHandler.FLOAT_TYPE:
-			for(int a = 0; a < arrayLength; a++) {
-				values.add(reader.readFloat());
-			}
-		break;
-		case (byte)XMLHandler.DOUBLE_TYPE:
-			for(int a = 0; a < arrayLength; a++) {
-				values.add(reader.readDouble());
-			}
-		break;
-		case (byte)XMLHandler.BOOLEAN_TYPE:
-			for(int a = 0; a < arrayLength; a++) {
-				values.add(reader.readBoolean());
-			}
-		break;
-		case (byte)XMLHandler.CHAR_TYPE:
-			for(int a = 0; a < arrayLength; a++) {
-				values.add(reader.readChar());
-			}
-		break;
-		case (byte)XMLHandler.STRING_TYPE:
-			for(int a = 0; a < arrayLength; a++) {
-				values.add(reader.readUTF());
-			}
-		break;
 		default:
 			throw new IllegalStateException("Cannot read XML binary value with no data type");
 		}

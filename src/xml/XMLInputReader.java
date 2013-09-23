@@ -151,11 +151,11 @@ public class XMLInputReader implements XMLInput {
 
 
 	/** Read an opening XML tag and add a corresponding tag to this reader's internal list of open XML tags
-	 * @param name - the name of the opening XML tag to read
+	 * @param name the name of the opening XML tag to read
 	 * @throws IOException if there is an IO or XML related error while reading from the input stream
 	 */
 	@Override
-	public void readOpeningBlock(String name) throws IOException {
+	public XMLTag readOpeningBlock(String name) throws IOException {
 		// If the peek header has been read (i.e. the head in front of the current head has read)
 		// then use the peek header as the next header
 		if(this.peekHeader != null) {
@@ -167,7 +167,7 @@ public class XMLInputReader implements XMLInput {
 			this.tagsRead++;
 			this.lastOpeningTag = this.peekHeader;
 			this.peekHeader = null;
-			return;
+			return lastOpeningTag;
 		}
 
 		// Else read the next header as normal
@@ -175,16 +175,17 @@ public class XMLInputReader implements XMLInput {
 		this.lastOpeningTag = newTag;
 		this.tagStack.add(name);
 		this.tagsRead++;
+		return lastOpeningTag;
 	}
 
 
 	/** Read any opening XML tag and add a corresponding tag to this reader's internal list of open XML tags
-	 * @return the name of the next XML opening tag read from the XML stream
+	 * @return the next opening XML tag read from the XML stream or null if the end of the document has been reached
 	 * @throws IOException if there is an IO error while reading from the input stream
 	 * @throws XMLStreamException if there is a XML error while reading from the to input stream
 	 */
 	@Override
-	public XMLTag readOpeningBlock() throws IOException {
+	public XMLTag readNextBlock() throws IOException {
 		// If the peek header has been read (i.e. the head in front of the current head has read)
 		// then use the peek header as the next header
 		if(this.peekHeader != null) {
@@ -203,9 +204,29 @@ public class XMLInputReader implements XMLInput {
 		// This call reads the next immediate header without checking its name
 		XMLTag newTag = readOpeningBlockVoid(null, false, xmlReader, attributesStack, closingTagsSkipped, false, false);
 		this.lastOpeningTag = newTag;
-		this.tagStack.add(newTag.getHeaderName());
-		this.tagsRead++;
+		if(newTag != null) {
+			this.tagStack.add(newTag.getHeaderName());
+			this.tagsRead++;
+		}
 		return newTag;
+	}
+
+
+	@Override
+	public XMLTag peekNextBlock() throws IOException {
+		/* If the peek head has not been read, read the next header and save it as the peek header.
+		 * The code is required because {@link #readOpeningBlock()} reuses some
+		 * and overwrites some of the current header variables so we save those
+		 * values in temp variables and restore them after storing the new
+		 * values in the peek header variables.
+		 */
+		if(peekHeader == null) {
+			// Peek at the next header
+			XMLTag newTag = readOpeningBlockVoid(null, true, xmlReader, attributesStack, closingTagsSkipped, false, false);
+			peekHeader = newTag;
+		}
+		// Return the new peek header or the current peek header
+		return peekHeader;
 	}
 
 
@@ -233,6 +254,7 @@ public class XMLInputReader implements XMLInput {
 	 */
 	private static XMLTag readOpeningBlockVoid(String name, boolean peek, XMLStreamReader reader, XMLAttributes attributes, List<XMLTag> readClosingTags, boolean doParseAhead, boolean throwIfNoTag) throws IOException {
 		String elementName = null;
+		String descriptor = null;
 		int attribCount = 0;
 
 		try {
@@ -242,7 +264,8 @@ public class XMLInputReader implements XMLInput {
 				elementName = reader.getLocalName(); // or .getName().getLocalPart();
 				// Add any closing tags to the list of closing tags
 				if(peek && readTag == XMLStreamConstants.END_ELEMENT) {
-					readClosingTags.add(new XMLTagImpl(elementName, DataHeader.OPENING));
+					// TODO read descriptor
+					readClosingTags.add(new XMLTagImpl(elementName, null, DataHeader.OPENING));
 				}
 			}
 			// If we should only check one element at a time, then look for the next opening or closing element
@@ -252,7 +275,8 @@ public class XMLInputReader implements XMLInput {
 					readTag = reader.next();
 					// Add any closing tags to the list of closing tags
 					if(peek && readTag == XMLStreamConstants.END_ELEMENT) {
-						readClosingTags.add(new XMLTagImpl(reader.getLocalName(), DataHeader.OPENING));
+						// TODO read descriptor
+						readClosingTags.add(new XMLTagImpl(reader.getLocalName(), null, DataHeader.OPENING));
 					}
 				}
 			}
@@ -265,7 +289,8 @@ public class XMLInputReader implements XMLInput {
 						elementName = reader.getLocalName(); // or .getName().getLocalPart();
 						// Add any closing tags to the list of closing tags
 						if(peek && readTag == XMLStreamConstants.END_ELEMENT) {
-							readClosingTags.add(new XMLTagImpl(elementName, DataHeader.OPENING));
+							// TODO read descriptor
+							readClosingTags.add(new XMLTagImpl(elementName, null, DataHeader.OPENING));
 						}
 					}
 				}
@@ -280,9 +305,16 @@ public class XMLInputReader implements XMLInput {
 					// Read any attributes attached to the opening tag
 					attribCount = reader.getAttributeCount();
 					if(attribCount > 0) {
+						boolean foundDescriptor = false;
 						attributes.clear();
 						for(int i = 0; i < attribCount; i++) {
-							attributes.addAttribute(reader.getAttributeLocalName(i), reader.getAttributeValue(i));
+							if(!foundDescriptor && XMLHandler.DESCRIPTOR_ID.equals(reader.getAttributeLocalName(i))) {
+								foundDescriptor = true;
+								descriptor = reader.getAttributeValue(i);
+							}
+							else {
+								attributes.addAttribute(reader.getAttributeLocalName(i), reader.getAttributeValue(i));
+							}
 						}
 					}
 				}
@@ -298,7 +330,8 @@ public class XMLInputReader implements XMLInput {
 		// Create the new element, or leave it null if no valid element name was read
 		XMLTag newTag = null;
 		if(elementName != null) {
-			newTag = new XMLTagImpl(elementName, DataHeader.OPENING);
+			// TODO read descriptor
+			newTag = new XMLTagImpl(elementName, descriptor, DataHeader.OPENING);
 		}
 		return newTag;
 	}
@@ -429,26 +462,8 @@ public class XMLInputReader implements XMLInput {
 
 
 	@Override
-	public XMLTag getCurrentHeaderBlock() {
+	public XMLTag getCurrentBlockHeader() {
 		return lastOpeningTag;
-	}
-
-
-	@Override
-	public XMLTag peekNextHeaderBlock() throws IOException {
-		/* If the peek head has not been read, read the next header and save it as the peek header.
-		 * The code is required because {@link #readOpeningBlock()} reuses some
-		 * and overwrites some of the current header variables so we save those
-		 * values in temp variables and restore them after storing the new
-		 * values in the peek header variables.
-		 */
-		if(peekHeader == null) {
-			// Peek at the next header
-			XMLTag newTag = readOpeningBlockVoid(null, true, xmlReader, attributesStack, closingTagsSkipped, false, false);
-			peekHeader = newTag;
-		}
-		// Return the new peek header or the current peek header
-		return peekHeader;
 	}
 
 

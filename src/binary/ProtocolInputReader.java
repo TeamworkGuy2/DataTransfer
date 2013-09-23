@@ -285,7 +285,25 @@ public class ProtocolInputReader implements ProtocolInput {
 
 
 	@Override
-	public void readOpeningBlock(int id) throws IOException {
+	public ProtocolHeader readNextBlock() throws IOException {
+		return readHeader(-1, false);
+	}
+
+
+	@Override
+	public ProtocolHeader readOpeningBlock(int id) throws IOException {
+		return readHeader(id, true);
+	}
+
+
+	/** Read the next block header
+	 * @param id the ID of the next block header to read
+	 * @param checkMatching true to check if this ID matches the ID of the
+	 * header read
+	 * @return the header read from the current input stream
+	 * @throws IOException if there is an error reading from the input stream
+	 */
+	private ProtocolHeader readHeader(int id, boolean checkMatching) throws IOException {
 		int tag = -1;
 		// If the peek header has not been read, simply read the next header
 		if(peekHeader == null) {
@@ -305,32 +323,30 @@ public class ProtocolInputReader implements ProtocolInput {
 			this.currentElementsRead = openBlockInfoStack[currentStackIndex+2];
 			peekHeader = null;
 			peekStackIndex = -STACK_INCREMENT;
+			tag = this.currentHeader.getHeaderId();
 		}
 		if(id != tag) { throwTagMissmatchException(id, tag); }
+		return currentHeader;
 	}
 
 
+	/** Way to read the next header independant of its type,
+	 * replaced by {@link #readNextBlock()}
+	 * @return the next header read from the input stream
+	 * @throws IOException if there is an error reading from the input stream
+	 */
 	@Override
-	public ProtocolHeader readOpeningBlock() throws IOException {
-		// If the peek header has not been read, simply read the next header
+	public ProtocolHeader peekNextBlock() throws IOException {
+		// If the peek header has not been read, read it and set the peek header
+		// variables equal to the new header's values
 		if(peekHeader == null) {
-			this.currentHeader = readBlockHeader(in, this, openBlockInfoStack, currentStackIndex, currentBlockId, currentElementsRead, currentBlockElements);
-			this.currentStackIndex += STACK_INCREMENT;
-			this.currentBlockId = openBlockInfoStack[currentStackIndex+0];
-			this.currentBlockElements = openBlockInfoStack[currentStackIndex+1];
-			this.currentElementsRead = openBlockInfoStack[currentStackIndex+2];
+			this.peekHeader = readBlockHeader(in, this, openBlockInfoStack, currentStackIndex, currentBlockId, currentElementsRead, currentBlockElements);
+			this.peekStackIndex = currentStackIndex + STACK_INCREMENT;
+			this.peekBlockId = openBlockInfoStack[peekStackIndex+0];
+			this.peekBlockElements = openBlockInfoStack[peekStackIndex+1];
+			this.peekElementsRead = openBlockInfoStack[peekStackIndex+2];
 		}
-		// If the peek header has been read, use it as the next header and set the peek header to null
-		else {
-			this.currentHeader = peekHeader;
-			this.currentStackIndex += STACK_INCREMENT;
-			this.currentBlockId = openBlockInfoStack[currentStackIndex+0];
-			this.currentBlockElements = openBlockInfoStack[currentStackIndex+1];
-			this.currentElementsRead = openBlockInfoStack[currentStackIndex+2];
-			peekHeader = null;
-			peekStackIndex = -STACK_INCREMENT;
-		}
-		return this.currentHeader;
+		return peekHeader;
 	}
 
 
@@ -399,6 +415,7 @@ public class ProtocolInputReader implements ProtocolInput {
 
 		// Read the block format data
 		byte blockTag = reader.readByte();
+		byte dataTypeRead = reader.readByte();
 		byte idBytes = readIdBytes(blockTag);
 		byte lengthBytes = readLengthBytes(blockTag);
 		blockId = readIntFromBytes(reader, idBytes);
@@ -407,6 +424,12 @@ public class ProtocolInputReader implements ProtocolInput {
 		}
 		elements = readIntFromBytes(reader, lengthBytes);
 		elementsRead = 1; // 1 because this opening tag counts as an element
+
+		// Read the block name
+		String name = null;
+		if(dataTypeRead != ProtocolHandler.NO_TYPE) {
+			name = reader.readUTF();
+		}
 
 		// Add the new block info to the stack
 		blockInfoStack[stackIndex+0] = blockId;
@@ -418,7 +441,7 @@ public class ProtocolInputReader implements ProtocolInput {
 		// Allow another method (normally this method's calling method) to then read the block's data
 		// A binary tag in this format has no closing tag, so we do not need to worry about reading that
 
-		ProtocolHeader newHeader = new ProtocolHeaderImpl(blockId, DataHeader.OPENING);
+		ProtocolHeader newHeader = new ProtocolHeaderImpl(blockId, name, DataHeader.OPENING);
 		return newHeader;
 	}
 
@@ -469,23 +492,8 @@ public class ProtocolInputReader implements ProtocolInput {
 
 
 	@Override
-	public ProtocolHeader getCurrentHeaderBlock() {
+	public ProtocolHeader getCurrentBlockHeader() {
 		return currentHeader;
-	}
-
-
-	@Override
-	public ProtocolHeader peekNextHeaderBlock() throws IOException {
-		// If the peek header has not been read, read it and set the peek header
-		// variables equal to the new header's values
-		if(peekHeader == null) {
-			this.peekHeader = readBlockHeader(in, this, openBlockInfoStack, currentStackIndex, currentBlockId, currentElementsRead, currentBlockElements);
-			this.peekStackIndex = currentStackIndex + STACK_INCREMENT;
-			this.peekBlockId = openBlockInfoStack[peekStackIndex+0];
-			this.peekBlockElements = openBlockInfoStack[peekStackIndex+1];
-			this.peekElementsRead = openBlockInfoStack[peekStackIndex+2];
-		}
-		return peekHeader;
 	}
 
 

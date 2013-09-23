@@ -210,78 +210,37 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 	}
 
 
-	/** Write an opening XML tag (with no ending new line) and add a corresponding closing XML tag to the tag stack
-	 * @param name - the name of the XML tag to write
-	 * @throws IOException if there is an IO error writing to the output stream
-	 */
-	private void pushTagNoLine(String name) throws IOException {
-		Writer out = this.output;
-		writeIndentation(out, indentationCount);
-		out.write(OPEN);
-		out.write(name);
-		out.write(CLOSE);
-		this.tagStack.add(name);
+	@Override
+	public void writeOpeningBlock(String name) throws IOException {
+		writeOpeningBlock(name, (String)null);
 	}
 
 
-	/** Write an opening XML tag (with no ending new line) and add a corresponding closing XML tag to the tag stack
-	 * @param name - the name of the XML tag to write
-	 * @throws IOException if there is an IO error writing to the output stream
-	 */
-	private void pushTagNoLine(String name, XMLAttributes attributes) throws IOException {
-		Writer out = this.output;
-		writeIndentation(out, indentationCount);
-		out.write(OPEN);
-		out.write(name);
-		out.write(' ');
-		List<String> names = attributes.getAttributeNames();
-		List<Object> values = attributes.getAttributeValues();
-		int size = names.size()-1;
-		if(size > -1) {
-			for(int i = 0; i < size; i++) {
-				out.write(names.get(i));
-				out.write('=');
-				out.write('\"');
-				out.write(values.get(i).toString());
-				out.write('\"');
-				out.write(' ');
-			}
-			out.write(names.get(size));
-			out.write('=');
-			out.write('\"');
-			out.write(values.get(size).toString());
-			out.write('\"');
-		}
-		out.write(CLOSE);
-		this.tagStack.add(name);
-	}
-
-
-	/** Write a closing XML tag (without adjusting indentation) for the last opening XML tag
-	 * @throws IOException if there is an IO error writing to the output stream
-	 */
-	private void popTagNoLine() throws IOException {
-		String name = this.tagStack.remove(this.tagStack.size()-1);
-		Writer out = this.output;
-		out.write(OPEN);
-		out.write(SLASH);
-		out.write(name);
-		out.write(CLOSE);
-		out.write(lineSeparator);
+	@Override
+	public void writeOpeningBlock(String name, XMLAttributes attributes) throws IOException {
+		writeOpeningBlock(name, (String)null, attributes);
 	}
 
 
 	/** Write an opening XML tag and add a corresponding closing XML tag to the tag stack
-	 * @param name - the name of the XML tag to write
+	 * @param name the name of the XML tag to write
+	 * @param descriptor an optional descriptor to write with the XML tag
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
 	@Override
-	public void writeOpeningBlock(String name) throws IOException {
+	public void writeOpeningBlock(String name, String descriptor) throws IOException {
 		Writer out = this.output;
 		writeIndentation(out, indentationCount);
 		this.indentationCount++;
 		out.write(OPEN);
 		out.write(name);
+		if(descriptor != null) {
+			out.write(' ');
+			out.write(XMLHandler.DESCRIPTOR_ID);
+			out.write("=\"");
+			out.write(descriptor);
+			out.write('\"');
+		}
 		out.write(CLOSE);
 		out.write(lineSeparator);
 		this.tagStack.add(name);
@@ -290,34 +249,46 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	/** Write an opening XML tag and add a corresponding closing XML tag to the tag stack
-	 * @param name - the name of the XML tag to write
+	 * @param name the name of the XML tag to write
+	 * @param descriptor an optional descriptor to write with the XML opening
+	 * tag, or null to write a generic XML tag
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
 	@Override
-	public void writeOpeningBlock(String name, XMLAttributes attributes) throws IOException {
+	public void writeOpeningBlock(String name, String descriptor, XMLAttributes attributes) throws IOException {
 		Writer out = this.output;
 		writeIndentation(out, indentationCount);
 		this.indentationCount++;
 		out.write(OPEN);
 		out.write(name);
-		out.write(' ');
-		List<String> names = attributes.getAttributeNames();
-		List<Object> values = attributes.getAttributeValues();
-		int size = names.size()-1;
-		if(size > -1) {
-			for(int i = 0; i < size; i++) {
-				out.write(names.get(i));
+		// Write the descriptor and attributes
+		if(descriptor != null) {
+			out.write(' ');
+			out.write(XMLHandler.DESCRIPTOR_ID);
+			out.write("=\"");
+			out.write(descriptor);
+			out.write('\"');
+		}
+		if(attributes != null) {
+			List<String> names = attributes.getAttributeNames();
+			List<Object> values = attributes.getAttributeValues();
+			int size = names.size()-1;
+			if(size > -1) {
+				out.write(' ');
+				for(int i = 0; i < size; i++) {
+					out.write(names.get(i));
+					out.write('=');
+					out.write('\"');
+					out.write(values.get(i).toString());
+					out.write('\"');
+					out.write(' ');
+				}
+				out.write(names.get(size));
 				out.write('=');
 				out.write('\"');
-				out.write(values.get(i).toString());
+				out.write(values.get(size).toString());
 				out.write('\"');
-				out.write(' ');
 			}
-			out.write(names.get(size));
-			out.write('=');
-			out.write('\"');
-			out.write(values.get(size).toString());
-			out.write('\"');
 		}
 		out.write(CLOSE);
 		out.write(lineSeparator);
@@ -384,6 +355,67 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 		this.output = null;
 		this.charset = null;
 		this.tagStack = null;
+	}
+
+
+	/** Write an opening XML tag (with no ending new line) and add a corresponding closing XML tag to the tag stack
+	 * @param name - the name of the XML tag to write
+	 * @throws IOException if there is an IO error writing to the output stream
+	 */
+	private void pushTagNoLine(String name) throws IOException {
+		Writer out = this.output;
+		writeIndentation(out, indentationCount);
+		out.write(OPEN);
+		out.write(name);
+		out.write(CLOSE);
+		this.tagStack.add(name);
+	}
+
+
+	/** Write an opening XML tag (with no ending new line) and add a corresponding closing XML tag to the tag stack
+	 * @param name - the name of the XML tag to write
+	 * @throws IOException if there is an IO error writing to the output stream
+	 */
+	private void pushTagNoLine(String name, XMLAttributes attributes) throws IOException {
+		Writer out = this.output;
+		writeIndentation(out, indentationCount);
+		out.write(OPEN);
+		out.write(name);
+		out.write(' ');
+		List<String> names = attributes.getAttributeNames();
+		List<Object> values = attributes.getAttributeValues();
+		int size = names.size()-1;
+		if(size > -1) {
+			for(int i = 0; i < size; i++) {
+				out.write(names.get(i));
+				out.write('=');
+				out.write('\"');
+				out.write(values.get(i).toString());
+				out.write('\"');
+				out.write(' ');
+			}
+			out.write(names.get(size));
+			out.write('=');
+			out.write('\"');
+			out.write(values.get(size).toString());
+			out.write('\"');
+		}
+		out.write(CLOSE);
+		this.tagStack.add(name);
+	}
+
+
+	/** Write a closing XML tag (without adjusting indentation) for the last opening XML tag
+	 * @throws IOException if there is an IO error writing to the output stream
+	 */
+	private void popTagNoLine() throws IOException {
+		String name = this.tagStack.remove(this.tagStack.size()-1);
+		Writer out = this.output;
+		out.write(OPEN);
+		out.write(SLASH);
+		out.write(name);
+		out.write(CLOSE);
+		out.write(lineSeparator);
 	}
 
 

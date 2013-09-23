@@ -20,6 +20,7 @@ public interface DataTransferInput extends Closeable {
 	 */
 	public void read(int id, String name, byte[] b) throws IOException;
 
+
 	/** Read the specified number of bytes from the next element
 	 * @param id the id of the element to read
 	 * @param name the name of the element to read
@@ -30,6 +31,7 @@ public interface DataTransferInput extends Closeable {
 	 */
 	public void read(int id, String name, byte[] b, int off, int len) throws IOException;
 
+
 	/** Parse a boolean value from the next element
 	 * @param id the id of the element to read
 	 * @param name the name of the element to read
@@ -37,6 +39,7 @@ public interface DataTransferInput extends Closeable {
 	 * @throws IOException if there is an IO error while reading from the input stream
 	 */
 	public boolean readBoolean(int id, String name) throws IOException;
+
 
 	/** Read a byte from the next element
 	 * @param id the id of the element to read
@@ -46,6 +49,7 @@ public interface DataTransferInput extends Closeable {
 	 */
 	public byte readByte(int id, String name) throws IOException;
 
+
 	/** Read a character from the next element
 	 * @param id the id of the element to read
 	 * @param name the name of the element to read
@@ -53,6 +57,7 @@ public interface DataTransferInput extends Closeable {
 	 * @throws IOException if there is an IO error while reading from the input stream
 	 */
 	public char readChar(int id, String name) throws IOException;
+
 
 	/** Parse a double from the next element
 	 * @param id the id of the element to read
@@ -62,6 +67,7 @@ public interface DataTransferInput extends Closeable {
 	 */
 	public double readDouble(int id, String name) throws IOException;
 
+
 	/** Parse a float from the next element
 	 * @param id the id of the element to read
 	 * @param name the name of the element to read
@@ -69,6 +75,7 @@ public interface DataTransferInput extends Closeable {
 	 * @throws IOException if there is an IO error while reading from the input stream
 	 */
 	public float readFloat(int id, String name) throws IOException;
+
 
 	/** Parse an integer from the next element
 	 * @param id the id of the element to read
@@ -78,6 +85,7 @@ public interface DataTransferInput extends Closeable {
 	 */
 	public int readInt(int id, String name) throws IOException;
 
+
 	/** Parse a long from the next element
 	 * @param id the id of the element to read
 	 * @param name the name of the element to read
@@ -85,6 +93,7 @@ public interface DataTransferInput extends Closeable {
 	 * @throws IOException if there is an IO error while reading from the input stream
 	 */
 	public long readLong(int id, String name) throws IOException;
+
 
 	/** Parse a short from the next element
 	 * @param id the id of the element to read
@@ -94,6 +103,7 @@ public interface DataTransferInput extends Closeable {
 	 */
 	public short readShort(int id, String name) throws IOException;
 
+
 	/** Read a String from this input stream
 	 * @param id the id of the element to read
 	 * @param name the name of the element to read
@@ -102,32 +112,10 @@ public interface DataTransferInput extends Closeable {
 	 */
 	public String readUTF(int id, String name) throws IOException;
 
-	/** Read an opening block tag and add a corresponding tag to this reader's
-	 * internal list of open block tags
-	 * @param id the block's tag identifier
-	 * @param name the name of the element to read
-	 * @throws IOException if there is an IO error while reading from the input stream
-	 */
-	public void readOpeningBlock(int id, String name) throws IOException;
-
-	/** Read the next opening block tag, no matter what it's ID or name is and add a
-	 * corresponding tag to this reader's internal list of open block tags
-	 * @return the identifier of the next opening block tag read from the stream
-	 * @throws IOException if there is an IO error while reading from the input stream
-	 */
-	public DataHeader readOpeningBlock() throws IOException;
-
-	/** Get the current read opening data block tag. This is the block header that
-	 * is currently being read. This method will return a new header once
-	 * {@link #readOpeningBlock()} or an equivalent parameterized version
-	 * is called.
-	 * @return the currently read opening data block tag
-	 */
-	public DataHeader getCurrentHeaderBlock();
 
 	/** Peek at the next header block in the data input stream.
 	 * This call reads the next data header block and returns it, however
-	 * the next call to {@link #readOpeningBlock()} or equivalent parameterized
+	 * the next call to {@link #readNextBlock()} or equivalent parameterized
 	 * version will return this peek header.<br/>
 	 * The purpose of this method is to parse arbitrary objects from an input
 	 * stream by peeking at the next object's header in the stream and call
@@ -136,12 +124,38 @@ public interface DataTransferInput extends Closeable {
 	 * @return the next data header from this input stream.
 	 * @throws IOException if there is an IO error while reading from the input stream
 	 */
-	public DataHeader peekNextHeaderBlock() throws IOException;
+	public DataHeader peekNextBlock() throws IOException;
+
+
+	/** Read the next opening or closing block tag, no matter what it's ID or name is
+	 * @return the next block tag read from the stream
+	 * @throws IOException if there is an IO error while reading from the input stream
+	 */
+	public DataHeader readNextBlock() throws IOException;
+
+
+	/** Read an opening block tag and add a corresponding tag to this reader's
+	 * internal list of open block tags
+	 * @param id the block's tag identifier
+	 * @param name the name of element to read
+	 * @return the next opening block tag read from the stream
+	 * @throws IOException if there is an IO error while reading from the input stream
+	 */
+	public DataHeader readOpeningBlock(int id, String name) throws IOException;
+
 
 	/** Read a closing block tag for the last read opening block tag, this
 	 * completes a block.
 	 * @throws IOException if there is an IO error reading from the input stream
 	 */
 	public void readClosingBlock() throws IOException;
+
+
+	/** Get the current read opening data block tag. This is the block header that
+	 * is currently being read. This method will return a new header once
+	 * {@link #readNextBlock()} or an equivalent method is called.
+	 * @return the currently read opening data block tag
+	 */
+	public DataHeader getCurrentBlockHeader();
 
 }

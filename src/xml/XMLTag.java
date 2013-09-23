@@ -10,14 +10,21 @@ import dataTransfer.DataHeader;
 public interface XMLTag extends DataHeader {
 
 	/**
-	 * @return this XML header tag's name, or null if it does not have a name.
+	 * @return this XML header tag's name
 	 */
+	@Override
 	public String getHeaderName();
+
 
 	/**
 	 * @return this XML header tag's ID between [0, Integer.MAX_VALUE], or -1 if
 	 * it does not have an ID.
 	 */
+	@Override
 	public int getHeaderId();
+
+
+	@Override
+	public String getDescriptor();
 
 }

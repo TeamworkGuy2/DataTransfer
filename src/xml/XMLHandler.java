@@ -83,6 +83,8 @@ public class XMLHandler {
 	public static final int CONVERTER_ATTRIBUTE_BYTES = 0x60;
 	/** The number of bits to shift to the right to make the bits used to stored the byte count start at the first bit */
 	public static final int CONVERTER_ATTRIBUTE_BYTES_SHIFT = 5;
+	/** The attribute name that identifies descriptors */
+	public static final String DESCRIPTOR_ID = "name";
 	private static final char lineSeparator = (char)0xA; // The XML standard uses LF to mark new lines, do not use System.getProperty("line.separator");
 	private static final String XML_HEADER_VERSION = "<?xml version=\"";
 	private static final String XML_HEADER_ENCODING = "\" encoding=\"";
@@ -105,7 +107,6 @@ public class XMLHandler {
 		InputStream inputSource = new BufferedInputStream(new FileInputStream(file));
 		ObjectInputStream in = new ObjectInputStream(inputSource);
 		// Recover the object
-		System.out.println("Recovering object:");
 		externalizableObj = (Externalizable)in.readObject();
 		//externalizableObj.readExternal(in);
 		in.close();
@@ -124,7 +125,6 @@ public class XMLHandler {
 		OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file));
 		ObjectOutputStream out = new ObjectOutputStream(outputStream);
 		// Save the object
-		System.out.println("Saving object:");
 		out.writeObject(externalizableObj);
 		//externalizableObj.writeExternal(out);
 		out.close();
@@ -149,6 +149,7 @@ public class XMLHandler {
 	 * This stream is not closed when the method returns.
 	 * @param textFormat true creates an XML text reader, false creates a binary XML input stream
 	 * @param xmlTag the opening and closing tag name to read from the XML stream
+	 * @param descriptor an optional descriptor to associate with XML tags
 	 * @param xmlObjects the array of XML objects to read from the input stream
 	 * @param aggressiveParsing - <code>True</code> causes the parser to read multiple elements when an element
 	 * cannot be found. <code>False</code> causes the parser to only read one element regardless of whether the
@@ -159,9 +160,9 @@ public class XMLHandler {
 	 * closing tag cannot be found. <code>False</code> causes the parser to silently ignore the missing tag.
 	 * @throws Exception if there is an error reading the XML object from the input stream
 	 */
-	public static void readXMLObjects(File file, boolean textFormat, String xmlTag, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoElementException, boolean throwsNoTagException) throws Exception {
+	public static void readXMLObjects(File file, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoElementException, boolean throwsNoTagException) throws Exception {
 		InputStream input = new BufferedInputStream(new FileInputStream(file));
-		readXMLObjectsInternal(true, input, textFormat, xmlTag, xmlObjects, aggressiveParsing, throwsNoElementException, throwsNoTagException);
+		readXMLObjectsInternal(true, input, textFormat, xmlTag, descriptor, xmlObjects, aggressiveParsing, throwsNoElementException, throwsNoTagException);
 	}
 
 
@@ -170,6 +171,7 @@ public class XMLHandler {
 	 * This stream is not closed when the method returns.
 	 * @param textFormat true creates an XML text reader, false creates a binary XML input stream
 	 * @param xmlTag the opening and closing tag name to read for the XML stream
+	 * @param descriptor an optional descriptor to associate with the XML tag
 	 * @param xmlObjects the array of XML objects to read from the input stream
 	 * @param aggressiveParsing - <code>True</code> causes the parser to read multiple elements when an element
 	 * cannot be found. <code>False</code> causes the parser to only read one element regardless of whether the
@@ -180,12 +182,12 @@ public class XMLHandler {
 	 * closing tag cannot be found. <code>False</code> causes the parser to silently ignore the missing tag.
 	 * @throws Exception if there is an error reading the XML objects from the input stream
 	 */
-	public static void readXMLObjects(InputStream input, boolean textFormat, String xmlTag, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoElementException, boolean throwsNoTagException) throws Exception {
-		readXMLObjectsInternal(false, input, textFormat, xmlTag, xmlObjects, aggressiveParsing, throwsNoElementException, throwsNoTagException);
+	public static void readXMLObjects(InputStream input, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoElementException, boolean throwsNoTagException) throws Exception {
+		readXMLObjectsInternal(false, input, textFormat, xmlTag, descriptor, xmlObjects, aggressiveParsing, throwsNoElementException, throwsNoTagException);
 	}
 
 
-	private static void readXMLObjectsInternal(boolean close, InputStream input, boolean textFormat, String xmlTag, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoElementException, boolean throwsNoTagException) throws Exception {
+	private static void readXMLObjectsInternal(boolean close, InputStream input, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoElementException, boolean throwsNoTagException) throws Exception {
 		XMLInput in = createXMLDataInput(input, textFormat, aggressiveParsing, throwsNoElementException, throwsNoTagException);
 		if(textFormat == true) {
 			XMLInputFactory xmlFactory = getXMLFactory();
@@ -225,12 +227,13 @@ public class XMLHandler {
 	 * @param file the file to write the XML objects to
 	 * @param textFormat true creates an XML text writer, false creates a binary XML output stream
 	 * @param xmlTag the opening and closing tag name to write as the opening and closing tags for the XML file
+	 * @param descriptor an optional descriptor to associate with the XML tags written
 	 * @param xmlObjects the array of XML objects to write to the file
 	 * @throws Exception if there is an error saving the XML object
 	 */
-	public static void writeXMLObjects(File file, boolean textFormat, String xmlTag, XMLable[] xmlObjects) throws Exception {
+	public static void writeXMLObjects(File file, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
 		OutputStream stream = new BufferedOutputStream(new FileOutputStream(file));
-		writeXMLObjectsInternal(true, stream, textFormat, xmlTag, xmlObjects);
+		writeXMLObjectsInternal(true, stream, textFormat, xmlTag, descriptor, xmlObjects);
 	}
 
 
@@ -240,15 +243,16 @@ public class XMLHandler {
 	 * @param output the output stream to write the XML objects to
 	 * @param textFormat true creates an XML text writer, false creates a binary XML output stream
 	 * @param xmlTag the opening and closing tag name to write as the opening and closing tags for the XML file
+	 * @param descriptor an optional descriptor to associate with the XML tags to write
 	 * @param xmlObjects the array of XML objects to write to the file
 	 * @throws Exception if there is an error saving the XML object
 	 */
-	public static void writeXMLObjects(OutputStream output, boolean textFormat, String xmlTag, XMLable[] xmlObjects) throws Exception {
-		writeXMLObjectsInternal(false, output, textFormat, xmlTag, xmlObjects);
+	public static void writeXMLObjects(OutputStream output, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
+		writeXMLObjectsInternal(false, output, textFormat, xmlTag, descriptor, xmlObjects);
 	}
 
 
-	private static void writeXMLObjectsInternal(boolean close, OutputStream output, boolean textFormat, String xmlTag, XMLable[] xmlObjects) throws Exception {
+	private static void writeXMLObjectsInternal(boolean close, OutputStream output, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
 		XMLOutput out = createXMLDataOutput(output, textFormat);
 		if(out instanceof XMLOutputWriter) {
 			((XMLOutputWriter)out).writeHeader();
@@ -257,7 +261,7 @@ public class XMLHandler {
 			((XMLOutputStream)out).writeHeader();
 		}
 
-		out.writeOpeningBlock(xmlTag);
+		out.writeOpeningBlock(xmlTag, descriptor);
 		int widgetCount = xmlObjects.length;
 		for(int i = 0; i < widgetCount; i++) {
 			xmlObjects[i].writeXML(out);

@@ -10,14 +10,21 @@ import dataTransfer.DataHeader;
 public interface ProtocolHeader extends DataHeader {
 
 	/**
-	 * @return this protocol block's header name, or null if it does not have a name.
+	 * @return this protocol block's header name, or null if it does
+	 * not have a name.
 	 */
+	@Override
 	public String getHeaderName();
 
 	/**
 	 * @return this protocol block's header ID between [0, Integer.MAX_VALUE], or -1 if
 	 * it does not have an ID.
 	 */
+	@Override
 	public int getHeaderId();
+
+
+	@Override
+	public String getDescriptor();
 
 }
