@@ -19,37 +19,50 @@ import xml.XMLTagImpl;
 /** {@link XMLInput} implementation wrapper that converts a {@link DataInput} stream into an {@link XMLInput}
  * stream.
  * For example a {@link DataInput} stream could be converted to an {@link xml.XMLable XMLable} object via this code.
- * <p><blockquote><pre class="brush: java">
- * public void readExternal(ObjectInput in) throws IOException {
- * 	XMLInputStream inputStream = new XMLInputStream(in);
- * 	try {
- * 		readXML(inputStream);
- * 	} catch (XMLStreamException e) {
- * 		throw new IOException(e);
- * 	}
- * 	finally {
- * 		inputStream.clear();
- * 		inputStream = null;
- * 	}
- * }
- * </pre></blockquote>
- * Binary format:
+ *
  * <br/>
- * Current format:
+ * Current binary format:
  * <pre>
- * tag format (1 byte, 8th bit=contains nested tags, 7-6th bits=attribute count bytes)
- * attribute count (bytes, 1=byte, 2=short, 3=integer)
- * attributes (objects, 7-6th bits=attribute array bytes, 5-1st bits=attribute data type, array bytes, attribute name string, attribute data)
- * 	attribute count (1-4 bytes, 1=byte, 2=short, 3=integer)
- * 	attribute name (Java string)
- * 	attribute data (bytes)
- * data format (1 byte, 7-6th bits=data array bytes, 5-1st bits=data type, array bytes, tag name string, data)
- * 	data count (bytes, 1=byte, 2=short, 3=integer)
- * 	tag name (Java string)
- * 	data (bytes)
+ * tag (required)
+ * 	u1 format
+ * 		byte 1:
+ * 		bit_8 contains_nested - 1 indicates this tag contains nested tags, 0 indicates a leaf tag
+ * 		bit_7-6 attribute_array_count_bytes - number of bytes that attribute_count is stored in
+ * 		bit_5-1 null
+ * 	u0/u1/u2/u4 attribute_count - if tag.attribute_array_count_bytes is 1 then
+ * 		read 1 byte, else if it is 2 read 1 short, else if it is 3 read
+ * 		1 integer, else if it is 0 do not read any data
+ * 
+ * attribute[tag.attribute_count] (required) - array of tag.attribute_count
+ * 	number of attributes. An attribute is a name-data pair
+ * 	u1 format
+ * 		byte 1:
+ * 		bit_8 null
+ * 		bit_7-6 data_array_count_bytes - number of bytes that data_array_size is stored in
+ * 		bit_5-1 data_type - the data type of the items in the array
+ * 	u0/u1/u2/u4 data_array_size - if attribute.data_array_count_bytes is 1 then read 1 byte,
+ * 		else if it is 2 read 1 short, else if it is 3 read 1 integer,
+ * 		else if it is 0 do not read any data
+ * 	UTF_String attribute_name - the name of the element
+ * 	data_type[attribute.data_array_size] attribute_data - attribute.data_array_size number of data
+ * 		items of type attribute.data_type
+ * 
+ * data (required)
+ * 	u1 format
+ * 		byte 1:
+ * 		bit_8 null
+ * 		bit_7-6 data_array_count_bytes - number of bytes that data_array_size is stored in
+ * 		bit_5-1 data_type - the data type of the items in the array
+ * 	u0/u1/u2/u4 data_array_size - if data.data_array_count_bytes is 1 then read 1 byte,
+ * 		else if it is 2 read 1 short, else if it is 3 read 1 integer,
+ * 		else if it is 0 do not read any data
+ * 	UTF_String tag_name - the name of the element
+ * 	data_type[data.data_array_size] data - data.data_array_size number of data
+ * 		items of type data.data_type
  * </pre>
  * 
- * future format...
+ * 
+ * future format (not yet implemented)...
  * <pre>
  * Nested block type
  * 	block ID - (2 bytes) ID of block type, see {@link XMLHandler} for some default block types, including, data, name, etc.
@@ -300,31 +313,12 @@ public class XMLInputStream implements XMLInput {
 
 	@Override
 	public XMLTag readOpeningBlock(String name) throws IOException {
-		XMLTag tag = null;
-		// If the next header has not been read (peeked at), read the next header
-		if(peekHeader == null) {
-			this.lastOpeningTag = readTag(in, attributeStack, tagDataTypeAndArrayLength, tempAttributeList, true);
-		}
-		// Else use the peek header and set the current header variables to the
-		// peek header variables and set the peek header variables to null
-		else {
-			tag = peekHeader;
-			lastOpeningTag = peekHeader;
-			peekHeader = null;
-			// Switch the attribute stacks so that the current attributes are the peek attributes
-			// and reuse the current attributes as the next peek attributes by clearing them
-			XMLAttributes tempAttributes = attributeStack;
-			attributeStack = peekAttributeStack;
-			tempAttributes.clear();
-			peekAttributeStack = tempAttributes;
-			// Set the current header values to the peek header values and reset the peek header values
-			int[] tempDataTypeAndArrayLength = tagDataTypeAndArrayLength;
-			tagDataTypeAndArrayLength = peekTagDataTypeAndArrayLength;
-			peekTagDataTypeAndArrayLength = tempDataTypeAndArrayLength;
-		}
+		XMLTag tag = readNextBlock();
+		// If the element name does not match, throw an exception
 		String tagName = tag.getHeaderName();
 		if(!name.equals(tagName)) { throwTagMissmatchException(name, tagName); }
-		return lastOpeningTag;
+
+		return tag;
 	}
 
 
@@ -415,60 +409,60 @@ public class XMLInputStream implements XMLInput {
 		XMLTag newTag = null;
 
 		try {
-			// Read the tag format info byte
-			byte tagInfo = reader.readByte();
-			boolean isLeaf = (tagInfo & XMLHandler.CONVERTER_CONTAINS_NESTED) != XMLHandler.CONVERTER_CONTAINS_NESTED;
-			byte attributeCountBytes = 0;
-			int attributeCount = 0;
+			// Read the tag format
+			byte tagFormat = reader.readByte();
+			// Is the element a leaf or does it contain nested elements
+			boolean isLeaf = (tagFormat & XMLHandler.CONVERTER_CONTAINS_NESTED) != XMLHandler.CONVERTER_CONTAINS_NESTED;
 			// Get the number of bytes storing the attribute count or non if there are no attributes
-			attributeCountBytes = (byte)((tagInfo & XMLHandler.CONVERTER_ATTRIBUTE_BYTES) >>> XMLHandler.CONVERTER_ATTRIBUTE_BYTES_SHIFT);
+			byte attributeCountBytes = (byte)((tagFormat & XMLHandler.CONVERTER_ATTRIBUTE_BYTES) >>> XMLHandler.CONVERTER_ATTRIBUTE_BYTES_SHIFT);
 			// Get 'attribute count size' number of bytes, or zero bytes if there are not attributes, and read them into an int value
-			attributeCount = readIntFromBytes(reader, attributeCountBytes);
+			int attributeCount = readIntFromBytes(reader, attributeCountBytes);
 
-			// Read the attributes if any
-			if(attributeCount > 0) {
-				// Read the specified number of attributes
-				byte attribInfo = 0;
-				byte attribType = 0;
-				boolean isArrayType = false;
-				byte arrayLengthBytes = 0;
-				int arrayLength = 0;
-				String attributeName = null;
-				attributes.clear();
-				// Read each attribute name and value
-				for(int i = 0; i < attributeCount; i++) {
-					// Read the attribute's info byte
-					attribInfo = reader.readByte();
-					attribType = (byte)(attribInfo & XMLHandler.DATA_TYPE);
-					isArrayType = (attribInfo & XMLHandler.ARRAY_TYPE) != 0;
-					if(isArrayType) {
-						arrayLengthBytes = (byte)((attribInfo & XMLHandler.CONVERTER_ATTRIBUTE_BYTES) >>> XMLHandler.CONVERTER_ATTRIBUTE_BYTES_SHIFT);
-						arrayLength = readIntFromBytes(reader, arrayLengthBytes);
-					}
-					// Read the attribute's name
-					attributeName = reader.readUTF();
-					// Read the attribute's data and add it to the attributeValues list
-					if(isArrayType) {
-						readAttributeTypeArray(reader, attribType, arrayLength, attributeName, attributes, tempList);
-					}
-					else {
-						readAttributeType(reader, attribType, attributeName, attributes);
-					}
+			// Read the specified number of attributes
+			attributes.clear();
+			byte attribFormat = 0;
+			byte attribType = 0;
+			boolean isArrayType = false;
+			byte arrayLengthBytes = 0;
+			int arrayLength = 0;
+			String attributeName = null;
+			// Read each attribute name and value
+			for(int i = 0; i < attributeCount; i++) {
+				// Read the attribute's info byte
+				attribFormat = reader.readByte();
+				// The attribute's data array type
+				attribType = (byte)(attribFormat & XMLHandler.DATA_TYPE);
+				// Is the attribute's data an array of data
+				isArrayType = (attribFormat & XMLHandler.ARRAY_TYPE) != 0;
+				// Calculate number of bytes storing the length of the attribute data array
+				arrayLengthBytes = (byte)((attribFormat & XMLHandler.CONVERTER_ATTRIBUTE_BYTES) >>> XMLHandler.CONVERTER_ATTRIBUTE_BYTES_SHIFT);
+				// Read the length of the attribute data array
+				arrayLength = readIntFromBytes(reader, arrayLengthBytes);
+				// Read the attribute's name
+				attributeName = reader.readUTF();
+				// Read the attribute's data and add it to the attributeValues list
+				if(isArrayType) {
+					readAttributeTypeArray(reader, attribType, arrayLength, attributeName, attributes, tempList);
+				}
+				else {
+					readAttributeType(reader, attribType, attributeName, attributes);
 				}
 			}
 
-			// Read the tag's data format info byte
-			byte dataInfo = 0;
+			// Read the data
+			byte dataFormat = 0;
+			//byte dataType = 0;
 			byte dataArrayLengthBytes = 0;
 			int dataArrayLength = 0;
-			// If the tag is a left tag (does not contain nested tags) then it will contain data
-			if(isLeaf == true) {
-				dataInfo = reader.readByte();
-				dataArrayLengthBytes = (byte)((dataInfo & XMLHandler.CONVERTER_ATTRIBUTE_BYTES) >>> XMLHandler.CONVERTER_ATTRIBUTE_BYTES_SHIFT);
-				dataArrayLength = readIntFromBytes(reader, dataArrayLengthBytes);
-				tagData[0] = (dataInfo & XMLHandler.ANY_TYPE);
-				tagData[1] = dataArrayLength;
-			}
+			// If the tag is a leaf tag (does not contain nested tags) then it will contain data
+			dataFormat = reader.readByte();
+			// Calculate number of bytes storing the length of the data array
+			dataArrayLengthBytes = (byte)((dataFormat & XMLHandler.CONVERTER_ATTRIBUTE_BYTES) >>> XMLHandler.CONVERTER_ATTRIBUTE_BYTES_SHIFT);
+			// Read the length of the data array
+			dataArrayLength = readIntFromBytes(reader, dataArrayLengthBytes);
+			// Store the data type and array length in the tag data array
+			tagData[0] = (dataFormat & XMLHandler.ANY_TYPE);
+			tagData[1] = dataArrayLength;
 
 			// Read the tag name
 			tagName = reader.readUTF();
@@ -485,12 +479,11 @@ public class XMLInputStream implements XMLInput {
 			else if(isLeaf == false && shouldContainNested == false) {
 				throw new XMLStreamException("XML error, [" + tagName + "] tag should not contain nested tags, but does.");
 			}
-
-			// Save the tag in the current XML tag
-			newTag = new XMLTagImpl(tagName, null, DataHeader.OPENING);
 		} catch(XMLStreamException xmlse) {
 			throw new IOException(xmlse);
 		}
+		// Create and return the newly read tag
+		newTag = new XMLTagImpl(tagName, null, DataHeader.OPENING);
 		return newTag;
 	}
 
@@ -502,7 +495,7 @@ public class XMLInputStream implements XMLInput {
 
 
 	@Override
-	public XMLAttributes getCurrentHeaderBlockAttributes() {
+	public XMLAttributes getCurrentBlockHeaderAttributes() {
 		return this.attributeStack;
 	}
 

@@ -129,8 +129,11 @@ public class ProtocolInputReader implements ProtocolInput {
 	private ProtocolHeader currentHeader;
 
 	private int peekStackIndex = -STACK_INCREMENT;
+	@SuppressWarnings("unused")
 	private int peekBlockId = -1;
+	@SuppressWarnings("unused")
 	private int peekElementsRead;
+	@SuppressWarnings("unused")
 	private int peekBlockElements;
 	private ProtocolHeader peekHeader;
 
@@ -152,6 +155,7 @@ public class ProtocolInputReader implements ProtocolInput {
 	 */
 	public void readHeader() {
 		int magic = 0;
+		@SuppressWarnings("unused")
 		int version = 0;
 		try {
 			magic = in.readInt();
@@ -379,6 +383,7 @@ public class ProtocolInputReader implements ProtocolInput {
 			throw new IOException("Data type read does not match expected data type (" + dataTypeRead + ", " + dataType + ")");
 		}
 		// Read array lengths
+		@SuppressWarnings("unused")
 		int arrayLength = 0;
 		if((dataTypeRead & ProtocolHandler.ARRAY_TYPE) == ProtocolHandler.ARRAY_TYPE) {
 			arrayLength = readIntFromBytes(reader, lengthBytes);

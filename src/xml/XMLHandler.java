@@ -84,14 +84,14 @@ public class XMLHandler {
 	/** The number of bits to shift to the right to make the bits used to stored the byte count start at the first bit */
 	public static final int CONVERTER_ATTRIBUTE_BYTES_SHIFT = 5;
 	/** The attribute name that identifies descriptors */
-	public static final String DESCRIPTOR_ID = "name";
+	static final Charset defaultCharset = Charset.forName("US-ASCII");
+	protected static final String DESCRIPTOR_ID = "name";
 	private static final char lineSeparator = (char)0xA; // The XML standard uses LF to mark new lines, do not use System.getProperty("line.separator");
 	private static final String XML_HEADER_VERSION = "<?xml version=\"";
 	private static final String XML_HEADER_ENCODING = "\" encoding=\"";
 	private static final String XML_HEADER_CLOSING = "\"?>" + lineSeparator;
 	private static final String XML_VERSION = "1.0";
 	private static final String[] charsetNames = new String[] {"UTF-8", "US-ASCII", "UTF-16"};
-	static final Charset defaultCharset = Charset.forName("US-ASCII");
 	private static XMLInputFactory factory;
 
 
@@ -154,15 +154,13 @@ public class XMLHandler {
 	 * @param aggressiveParsing - <code>True</code> causes the parser to read multiple elements when an element
 	 * cannot be found. <code>False</code> causes the parser to only read one element regardless of whether the
 	 * element contains the matching tag name or not.
-	 * @param throwsNoElementException - <code>True</code> causes the parser to throw an exception if an element name
-	 * cannot be found. <code>False</code> causes the parser to silently return null when unable to parse an element.
 	 * @param throwsNoTagException - <code>True</code> causes the parser to throw an exception if an opening or
 	 * closing tag cannot be found. <code>False</code> causes the parser to silently ignore the missing tag.
 	 * @throws Exception if there is an error reading the XML object from the input stream
 	 */
-	public static void readXMLObjects(File file, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoElementException, boolean throwsNoTagException) throws Exception {
+	public static void readXMLObjects(File file, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
 		InputStream input = new BufferedInputStream(new FileInputStream(file));
-		readXMLObjectsInternal(true, input, textFormat, xmlTag, descriptor, xmlObjects, aggressiveParsing, throwsNoElementException, throwsNoTagException);
+		readXMLObjectsInternal(true, input, textFormat, xmlTag, descriptor, xmlObjects, aggressiveParsing, throwsNoTagException);
 	}
 
 
@@ -176,23 +174,21 @@ public class XMLHandler {
 	 * @param aggressiveParsing - <code>True</code> causes the parser to read multiple elements when an element
 	 * cannot be found. <code>False</code> causes the parser to only read one element regardless of whether the
 	 * element contains the matching tag name or not.
-	 * @param throwsNoElementException - <code>True</code> causes the parser to throw an exception if an element name
-	 * cannot be found. <code>False</code> causes the parser to silently return null when unable to parse an element.
 	 * @param throwsNoTagException - <code>True</code> causes the parser to throw an exception if an opening or
 	 * closing tag cannot be found. <code>False</code> causes the parser to silently ignore the missing tag.
 	 * @throws Exception if there is an error reading the XML objects from the input stream
 	 */
-	public static void readXMLObjects(InputStream input, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoElementException, boolean throwsNoTagException) throws Exception {
-		readXMLObjectsInternal(false, input, textFormat, xmlTag, descriptor, xmlObjects, aggressiveParsing, throwsNoElementException, throwsNoTagException);
+	public static void readXMLObjects(InputStream input, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
+		readXMLObjectsInternal(false, input, textFormat, xmlTag, descriptor, xmlObjects, aggressiveParsing, throwsNoTagException);
 	}
 
 
-	private static void readXMLObjectsInternal(boolean close, InputStream input, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoElementException, boolean throwsNoTagException) throws Exception {
-		XMLInput in = createXMLDataInput(input, textFormat, aggressiveParsing, throwsNoElementException, throwsNoTagException);
+	private static void readXMLObjectsInternal(boolean close, InputStream input, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
+		XMLInput in = createXMLInput(input, textFormat, aggressiveParsing, throwsNoTagException);
 		if(textFormat == true) {
 			XMLInputFactory xmlFactory = getXMLFactory();
 			XMLStreamReader reader = xmlFactory.createXMLStreamReader(input, defaultCharset.name());
-			in = new XMLInputReader(reader, aggressiveParsing, throwsNoElementException, throwsNoTagException);
+			in = new XMLInputReader(reader, aggressiveParsing, throwsNoTagException);
 		}
 		else {
 			in = new XMLInputStream(new DataInputStream(input));
@@ -253,7 +249,7 @@ public class XMLHandler {
 
 
 	private static void writeXMLObjectsInternal(boolean close, OutputStream output, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
-		XMLOutput out = createXMLDataOutput(output, textFormat);
+		XMLOutput out = createXMLOutput(output, textFormat);
 		if(out instanceof XMLOutputWriter) {
 			((XMLOutputWriter)out).writeHeader();
 		}
@@ -287,7 +283,7 @@ public class XMLHandler {
 	 * closing tag cannot be found. <code>False</code> causes the parser to silently ignore the missing tag.
 	 * @throws IOException if there is an error creating the XML input stream
 	 */
-	public static XMLInput createXMLDataInput(InputStream input, boolean textFormat, boolean aggressiveParsing, boolean throwsNoElementException, boolean throwsNoTagException) throws IOException {
+	public static XMLInput createXMLInput(InputStream input, boolean textFormat, boolean aggressiveParsing, boolean throwsNoTagException) throws IOException {
 		XMLInput in = null;
 		if(textFormat == true) {
 			XMLInputFactory xmlFactory = getXMLFactory();
@@ -297,7 +293,7 @@ public class XMLHandler {
 			} catch (XMLStreamException e) {
 				throw new IOException(e);
 			}
-			in = new XMLInputReader(reader, true, true, true);
+			in = new XMLInputReader(reader, aggressiveParsing, throwsNoTagException);
 		}
 		else {
 			in = new XMLInputStream(new DataInputStream(input));
@@ -313,7 +309,7 @@ public class XMLHandler {
 	 * @return the XML output stream created from the output stream
 	 * @throws IOException if there is an error creating the XML output stream
 	 */
-	public static XMLOutput createXMLDataOutput(OutputStream output, boolean textFormat) {
+	public static XMLOutput createXMLOutput(OutputStream output, boolean textFormat) {
 		XMLOutput out = null;
 		if(textFormat == true) {
 			Writer writer = new BufferedWriter(new OutputStreamWriter(output, defaultCharset));
@@ -323,6 +319,21 @@ public class XMLHandler {
 			out = new XMLOutputStream(new DataOutputStream(output));
 		}
 		return out;
+	}
+
+
+	protected static Charset getCharset() throws IOException {
+		Charset charset = null;
+		for(int i = 0; i < charsetNames.length; i++) {
+			if(Charset.isSupported(charsetNames[i])) {
+				charset = Charset.forName(charsetNames[i]);
+				break;
+			}
+		}
+		if(charset == null) {
+			throw new IOException("Could not find supported charset");
+		}
+		return charset;
 	}
 
 
@@ -374,21 +385,6 @@ public class XMLHandler {
 		default:
 			return "OTHER";
 		}
-	}
-
-
-	private static Charset getCharset() throws IOException {
-		Charset charset = null;
-		for(int i = 0; i < charsetNames.length; i++) {
-			if(Charset.isSupported(charsetNames[i])) {
-				charset = Charset.forName(charsetNames[i]);
-				break;
-			}
-		}
-		if(charset == null) {
-			throw new IOException("Could not find supported charset");
-		}
-		return charset;
 	}
 
 

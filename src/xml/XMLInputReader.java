@@ -22,9 +22,8 @@ public class XMLInputReader implements XMLInput {
 	private int tagsRead;
 	private XMLStreamReader xmlReader; // XML reader to read XML data from
 	private List<XMLTag> closingTagsSkipped;
-	//private Charset charset;
+	private String[] tempElement;
 	private boolean parseAhead;
-	private boolean noElementException;
 	private boolean noTagException;
 	private XMLTag lastOpeningTag;
 	private XMLAttributes attributesStack;
@@ -35,35 +34,41 @@ public class XMLInputReader implements XMLInput {
 	/** An XML input stream parser
 	 * It is recommended to encode strings using the {@link XMLHandler#STRING_TYPE} type
 	 * to encode strings that may contain unicode characters.
-	 * @param reader - the XML stream reader to read XML data from
-	 * @param aggressiveParsing - <code>true</code> causes the parser to search more multiple elements when
-	 * an element cannot be found, elements are then cached and used in future read operations.<br/>
+	 * @param reader the XML stream reader to read XML data from
+	 * @param aggressiveParsing <code>true</code> causes the parser to search multiple elements when
+	 * an element name cannot be found.<br/>
 	 * <code>false</code> causes the parser to only search one element regardless of whether the element
 	 * contains the searched for matching tag name or not.
-	 * @param throwsNoElementException - true causes parser to throw an exception if an element name cannot
-	 * be found, false causes the parse to silently return null from any <code>readXXX</code> method.
-	 * @param throwsNoTagException - true causes parser to throw an exception if an opening or closing tag
-	 * cannot be found, false causes the parse to silently ignore the missing tag.
+	 * @param throwsNoTagException true causes parser to throw an exception if an opening or closing tag
+	 * cannot be found, false causes the parse to silently ignore the missing tag possibly causing some other
+	 * error to be thrown.
 	 */
-	public XMLInputReader(XMLStreamReader reader, boolean aggressiveParsing, boolean throwsNoElementException, boolean throwsNoTagException) throws FileNotFoundException {
+	public XMLInputReader(XMLStreamReader reader, boolean aggressiveParsing, boolean throwsNoTagException) throws FileNotFoundException {
 		if(reader == null) {
-			throw new IllegalArgumentException("XMLStreamReader cannot be null input parameters");
+			throw new IllegalArgumentException("XMLStreamReader cannot be a null input parameter");
 		}
+		this.tempElement = new String[2];
 		this.parseAhead = aggressiveParsing;
-		this.noElementException = throwsNoElementException;
 		this.noTagException = throwsNoTagException;
 		this.xmlReader = reader;
 		this.closingTagsSkipped = new ArrayList<XMLTag>();
-		//this.charset = charset;
 		this.tagStack = new ArrayList<String>();
 		this.attributesStack = new XMLAttributes();
 		this.peekAttributesStack = new XMLAttributes();
 		this.tagsRead = 0;
+		readHeader();
 	}
 
 
 	public void readHeader() {
-		// The XMLStreamReader passed to this constructor already ready the XML header
+		if(xmlReader.getEventType() == XMLStreamConstants.START_DOCUMENT) {
+			try {
+				xmlReader.next();
+			} catch (XMLStreamException e) {
+				System.err.println("Error reading START_DOCUMENT from XML stream");
+				e.printStackTrace();
+			}
+		}
 	}
 
 
@@ -75,6 +80,7 @@ public class XMLInputReader implements XMLInput {
 		return;
 	}
 
+
 	@Override
 	public void read(String name, byte[] b, int off, int len) throws IOException {
 		String text = readElement(xmlReader, name);
@@ -83,6 +89,7 @@ public class XMLInputReader implements XMLInput {
 		return;
 	}
 
+
 	@Override
 	public boolean readBoolean(String name) throws IOException {
 		String text = readElement(xmlReader, name);
@@ -90,12 +97,14 @@ public class XMLInputReader implements XMLInput {
 		return result;
 	}
 
+
 	@Override
 	public byte readByte(String name) throws IOException {
 		String text = readElement(xmlReader, name);
 		byte result = (byte)text.charAt(0);
 		return result;
 	}
+
 
 	@Override
 	public char readChar(String name) throws IOException {
@@ -108,12 +117,14 @@ public class XMLInputReader implements XMLInput {
 		return result;
 	}
 
+
 	@Override
 	public double readDouble(String name) throws IOException {
 		String text = readElement(xmlReader, name);
 		double result = Double.parseDouble(text);
 		return result;
 	}
+
 
 	@Override
 	public float readFloat(String name) throws IOException {
@@ -122,12 +133,14 @@ public class XMLInputReader implements XMLInput {
 		return result;
 	}
 
+
 	@Override
 	public int readInt(String name) throws IOException {
 		String text = readElement(xmlReader, name);
 		int result = Integer.parseInt(text, 10);
 		return result;
 	}
+
 
 	@Override
 	public long readLong(String name) throws IOException {
@@ -136,12 +149,14 @@ public class XMLInputReader implements XMLInput {
 		return result;
 	}
 
+
 	@Override
 	public short readShort(String name) throws IOException {
 		String text = readElement(xmlReader, name);
 		short result = Short.parseShort(text, 10);
 		return result;
 	}
+
 
 	@Override
 	public String readUTF(String name) throws IOException {
@@ -167,15 +182,24 @@ public class XMLInputReader implements XMLInput {
 			this.tagsRead++;
 			this.lastOpeningTag = this.peekHeader;
 			this.peekHeader = null;
-			return lastOpeningTag;
+			return this.lastOpeningTag;
 		}
 
 		// Else read the next header as normal
-		XMLTag newTag = readOpeningBlockVoid(name, false, xmlReader, attributesStack, closingTagsSkipped, parseAhead, noTagException);
+		// This call reads the next header with a matching name, this may read past valuable elements
+		XMLTag newTag = readOpeningBlockGreedy(xmlReader, name, false, attributesStack, closingTagsSkipped);
 		this.lastOpeningTag = newTag;
-		this.tagStack.add(name);
-		this.tagsRead++;
-		return lastOpeningTag;
+		if(newTag != null) {
+			this.tagStack.add(newTag.getHeaderName());
+			this.tagsRead++;
+		}
+
+		// If the name should match the element name, then thrown an exception if they do not match
+		if(noTagException && !name.equals(newTag.getHeaderName())) {
+			throw new IOException("Could not find '" + name + "' XML tag name, found '" + newTag.getHeaderName() + "' instead");
+		}
+
+		return newTag;
 	}
 
 
@@ -202,7 +226,7 @@ public class XMLInputReader implements XMLInput {
 
 		// Else read the next header as normal
 		// This call reads the next immediate header without checking its name
-		XMLTag newTag = readOpeningBlockVoid(null, false, xmlReader, attributesStack, closingTagsSkipped, false, false);
+		XMLTag newTag = readOpeningBlockExact(xmlReader, false, attributesStack, closingTagsSkipped);
 		this.lastOpeningTag = newTag;
 		if(newTag != null) {
 			this.tagStack.add(newTag.getHeaderName());
@@ -222,7 +246,7 @@ public class XMLInputReader implements XMLInput {
 		 */
 		if(peekHeader == null) {
 			// Peek at the next header
-			XMLTag newTag = readOpeningBlockVoid(null, true, xmlReader, attributesStack, closingTagsSkipped, false, false);
+			XMLTag newTag = readOpeningBlockExact(xmlReader, true, attributesStack, closingTagsSkipped);
 			peekHeader = newTag;
 		}
 		// Return the new peek header or the current peek header
@@ -235,228 +259,14 @@ public class XMLInputReader implements XMLInput {
 	 */
 	@Override
 	public void readClosingBlock() throws IOException {
-		readClosingBlockVoid(closingTagsSkipped);
-	}
-
-
-	/** Read an opening XML tag
-	 * @param name the name of the tag to read
-	 * @param peek true to add closing tags to the list of closing tags, false to read past closing tags
-	 * @param reader the XML read to read the XML elements from
-	 * @param attributes an empty attribute group to fill with attributes attached to the opening tag read
-	 * @param closingTags a list of XML closing tags to add closing tags to if {@code peek} is true.
-	 * @param doParseAhead true to parse past elements that don't match the specified name,
-	 * false to stop at the first opening element encountered.
-	 * @param throwIfNoTag throw an exception if the open tag's name does not match {@code name}
-	 * @return the XML opening element/tag read
-	 * @throws IOException if there is an exception reading from the XML input
-	 * stream or if the tag name does not match.
-	 */
-	private static XMLTag readOpeningBlockVoid(String name, boolean peek, XMLStreamReader reader, XMLAttributes attributes, List<XMLTag> readClosingTags, boolean doParseAhead, boolean throwIfNoTag) throws IOException {
-		String elementName = null;
-		String descriptor = null;
-		int attribCount = 0;
-
-		try {
-			int readTag = reader.next();
-			// If the current element is a start or end element, initialize the elementName
-			if(readTag == XMLStreamConstants.START_ELEMENT || readTag == XMLStreamConstants.END_ELEMENT) {
-				elementName = reader.getLocalName(); // or .getName().getLocalPart();
-				// Add any closing tags to the list of closing tags
-				if(peek && readTag == XMLStreamConstants.END_ELEMENT) {
-					// TODO read descriptor
-					readClosingTags.add(new XMLTagImpl(elementName, null, DataHeader.OPENING));
-				}
-			}
-			// If we should only check one element at a time, then look for the next opening or closing element
-			if(doParseAhead == false) {
-				// Keep reading until the first opening or closing element is encountered
-				while(readTag != XMLStreamConstants.START_ELEMENT && readTag != XMLStreamConstants.END_DOCUMENT) {
-					readTag = reader.next();
-					// Add any closing tags to the list of closing tags
-					if(peek && readTag == XMLStreamConstants.END_ELEMENT) {
-						// TODO read descriptor
-						readClosingTags.add(new XMLTagImpl(reader.getLocalName(), null, DataHeader.OPENING));
-					}
-				}
-			}
-			// If we should read more than one element in search of the name we are looking for
-			else {
-				// Reading until an opening or closing element with the name we are looking for is found
-				while(!name.equals(elementName) && readTag != XMLStreamConstants.END_DOCUMENT) {
-					readTag = reader.next();
-					if(readTag == XMLStreamConstants.START_ELEMENT || readTag == XMLStreamConstants.END_ELEMENT) {
-						elementName = reader.getLocalName(); // or .getName().getLocalPart();
-						// Add any closing tags to the list of closing tags
-						if(peek && readTag == XMLStreamConstants.END_ELEMENT) {
-							// TODO read descriptor
-							readClosingTags.add(new XMLTagImpl(elementName, null, DataHeader.OPENING));
-						}
-					}
-				}
-			}
-
-			// Get the element's name and attributes
-			if(readTag == XMLStreamConstants.START_ELEMENT || readTag == XMLStreamConstants.END_ELEMENT) {
-				elementName = reader.getLocalName(); // or .getName().getLocalPart();
-				//System.out.println("XML reading tag: \"" + elementName + "\"");
-				// Read any attributes attached to the opening element
-				if(readTag == XMLStreamConstants.START_ELEMENT) {
-					// Read any attributes attached to the opening tag
-					attribCount = reader.getAttributeCount();
-					if(attribCount > 0) {
-						boolean foundDescriptor = false;
-						attributes.clear();
-						for(int i = 0; i < attribCount; i++) {
-							if(!foundDescriptor && XMLHandler.DESCRIPTOR_ID.equals(reader.getAttributeLocalName(i))) {
-								foundDescriptor = true;
-								descriptor = reader.getAttributeValue(i);
-							}
-							else {
-								attributes.addAttribute(reader.getAttributeLocalName(i), reader.getAttributeValue(i));
-							}
-						}
-					}
-				}
-			}
-			// If the name should match the element name, then thrown an exception if they do not match
-			if(throwIfNoTag && !name.equals(elementName)) {
-				throw new XMLStreamException("Could not find '" + name + "' XML tag name, found '" + elementName + "' instead");
-			}
-		} catch(XMLStreamException xmlse) {
-			throw new IOException(xmlse);
-		}
-
-		// Create the new element, or leave it null if no valid element name was read
-		XMLTag newTag = null;
-		if(elementName != null) {
-			// TODO read descriptor
-			newTag = new XMLTagImpl(elementName, descriptor, DataHeader.OPENING);
-		}
-		return newTag;
-	}
-
-
-	/**
-	 * @param peek
-	 * @param reader
-	 * @param attributes
-	 * @param readClosingTags
-	 * @return the opening header tag read or null if an opening header could not be found
-	 * @throws IOException
-	 */
-/*	private static XMLTag readOpeningBlockVoid_Old(boolean peek, XMLStreamReader reader, XMLAttributes attributes, List<XMLTag> readClosingTags) throws IOException {
-		String chars = null;
-		int attribCount = 0;
-
-		try {
-			int currentEvent = reader.next();
-			// If the current element is a start or end element, initialize the elementName
-			if(currentEvent == XMLStreamConstants.START_ELEMENT || currentEvent == XMLStreamConstants.END_ELEMENT) {
-				chars = reader.getLocalName(); // or .getName().getLocalPart();
-				// Add any closing tags to the list of closing tags
-				if(peek && currentEvent == XMLStreamConstants.END_ELEMENT) {
-					readClosingTags.add(new XMLTagImpl(chars));
-				}
-			}
-			// Look for the next opening or closing element
-			while(currentEvent != XMLStreamConstants.START_ELEMENT && currentEvent != XMLStreamConstants.END_DOCUMENT) {
-				currentEvent = reader.next();
-				// Add any closing tags to the list of closing tags
-				if(peek && currentEvent == XMLStreamConstants.END_ELEMENT) {
-					readClosingTags.add(new XMLTagImpl(reader.getLocalName()));
-				}
-			}
-
-			// Check if the starting element's name matches the name we are looking for
-			if(currentEvent == XMLStreamConstants.START_ELEMENT) {
-				chars = reader.getLocalName(); // or .getName().getLocalPart();
-				// Read any attributes attached to the opening tag
-				attribCount = reader.getAttributeCount();
-				if(attribCount > 0) {
-					attributes.clear();
-					for(int i = 0; i < attribCount; i++) {
-						attributes.addAttribute(reader.getAttributeLocalName(i), reader.getAttributeValue(i));
-					}
-				}
-			}
-		} catch(XMLStreamException xmlse) {
-			throw new IOException(xmlse);
-		}
-
-		XMLTag newTag = null;
-		if(chars != null) {
-			newTag = new XMLTagImpl(chars);
-		}
-		return newTag;
-	}*/
-
-
-	private void readClosingBlockVoid(List<XMLTag> readClosingTags) throws IOException {
-		List<String> tags = this.tagStack;
-		String name = tags.get(tags.size()-1);
-		String chars = null;
-		XMLStreamReader reader = this.xmlReader;
-
-		//System.out.println("XML closing tag: " + name);
-
-		// Check if any of the closing tags read by {@link #peekNextHeaderBlock()}
-		// match the current closing tag being read
-		int closingTagCount = readClosingTags.size();
-		if(closingTagCount > 0) {
-			for(int i = 0; i < closingTagCount; i++) {
-				if(readClosingTags.get(i).getHeaderName().equals(name)) {
-					readClosingTags.remove(i);
-					tags.remove(tags.size()-1);
-					//System.out.println("XML closing peek tag: " + name);
-					this.tagsRead++;
-					return;
-				}
-			}
-		}
-		// Look for the closing element
-		try {
-			int readTag = reader.next();
-			// If the current element is a start or end element, get the name of the element
-			if(readTag == XMLStreamConstants.START_ELEMENT || readTag == XMLStreamConstants.END_ELEMENT) {
-				chars = reader.getLocalName(); // or .getName().getLocalPart();
-			}
-			// If we should only check one element at a time, then just look for an ending element
-			if(parseAhead == false) {
-				while(readTag != XMLStreamConstants.END_ELEMENT && readTag != XMLStreamConstants.END_DOCUMENT) {
-					readTag = reader.next();
-				}
-			}
-			// If we should read more than one element in search of the name we are looking for
-			else {
-				// Search for the exact element name, reading and throwing away unkown elements if parseAhead == true
-				while(!name.equals(chars) && readTag != XMLStreamConstants.END_DOCUMENT) {
-					readTag = reader.next();
-					if(readTag == XMLStreamConstants.START_ELEMENT || readTag == XMLStreamConstants.END_ELEMENT) {
-						chars = reader.getLocalName(); // or .getName().getLocalPart();
-					}
-				}
-			}
-
-			// Check if the ending element's name matches the name we are looking for
-			if(readTag == XMLStreamConstants.START_ELEMENT || readTag == XMLStreamConstants.END_ELEMENT) {
-				chars = reader.getLocalName(); // or .getName().getLocalPart();
-			}
-
-			if(noTagException && !name.equals(chars)) {
-				throw new IOException("Could not find '" + name + "' XML tag name, found '" + chars + "' instead");
-			}
-			tags.remove(tags.size()-1);
-			this.tagsRead++;
-		} catch(XMLStreamException xmlse) {
-			throw new IOException(xmlse);
-		}
-		return;
+		// This method call reads until a matching closing tag is found, this may read past valuable elements
+		int read = readClosingBlockGreedy(xmlReader, tagStack, closingTagsSkipped, noTagException);
+		tagsRead += read;
 	}
 
 
 	@Override
-	public XMLAttributes getCurrentHeaderBlockAttributes() {
+	public XMLAttributes getCurrentBlockHeaderAttributes() {
 		return this.attributesStack;
 	}
 
@@ -521,85 +331,290 @@ public class XMLInputReader implements XMLInput {
 	 * @throws IOException, XMLStreamException if there is an error while parsing the XML data
 	 */
 	private String readElement(XMLStreamReader stream, String name) throws IOException {
+		// Read the next element
+		readElement(stream, tempElement, name, attributesStack);
+		// If reading ahead is enabled, read and discard elements until a matching element is found
+		if(parseAhead) {
+			while(!name.equals(tempElement[0]) && stream.getEventType() != XMLStreamConstants.END_DOCUMENT) {
+				readElement(stream, tempElement, name, attributesStack);
+			}
+		}
+		// If the element found does not match the element being searched for, throw an IOException, XMLStreamException
+		if(!name.equals(tempElement[0])) {
+			throw new IOException("Mismatch between XML element name '" + name + "' and found element name '" + tempElement[0] + "'");
+		}
+		return tempElement[1];
+	}
+
+
+	/** Read the specified element from the specified XML stream.<br/>
+	 * This method reads one element if the constructor's <code>aggressiveParsing</code> parameter was false.
+	 * Else this method reads as many elements as possible until the correct element name is found or the end of
+	 * the document is reached.
+	 * @param an array of size 2 to put the name and contents of the element read into
+	 * @param element the name of the element to read and return
+	 * @param debugName the expected name of the element for error messages, null represents any name
+	 * @return the character data contained in the specified element
+	 * @throws XMLStreamIOException if there is an XML error while reading the data
+	 * @throws IOException if there is an error while parsing the XML data
+	 */
+	private static void readElement(XMLStreamReader stream, String[] element, String debugName, XMLAttributes elementAttribs) throws IOException {
 		String chars = null;
 		String tagName = null;
 		int attribCount = 0;
 
+		// Read a start element, the contents of the element, and an end element
 		try {
-			int readTag = stream.next();
-			// If the current element is a start element, get the name of the element
-			if(readTag == XMLStreamConstants.START_ELEMENT) {
-				tagName = stream.getLocalName(); // or .getName().getLocalPart();
-				// Read any attributes attached to the opening tag
-				attribCount = stream.getAttributeCount();
-				if(attribCount > 0) {
-					this.attributesStack.clear();
-					for(int i = 0; i < attribCount; i++) {
-						this.attributesStack.addAttribute(stream.getAttributeLocalName(i), stream.getAttributeValue(i));
-					}
+			int readTag = stream.getEventType();
+
+			// Read any character events (corresponding to whitespace between elements? is this assumption correct)
+			while(readTag == XMLStreamConstants.CHARACTERS) {
+				readTag = stream.next();
+			}
+
+			if(readTag != XMLStreamConstants.START_ELEMENT) {
+				throw new IllegalStateException("Mismatching XML tag read, expected START_ELEMENT: " + debugName + ", found " + XMLHandler.toString(readTag) + ((readTag == XMLStreamConstants.END_ELEMENT) ? ": " + stream.getLocalName() : ""));
+			}
+
+			tagName = stream.getLocalName(); // or .getName().getLocalPart();
+			// Read any attributes attached to the opening tag
+			attribCount = stream.getAttributeCount();
+			if(attribCount > 0) {
+				elementAttribs.clear();
+				for(int i = 0; i < attribCount; i++) {
+					elementAttribs.addAttribute(stream.getAttributeLocalName(i), stream.getAttributeValue(i));
 				}
 			}
+			// Move into the element and read it's contents
+			readTag = stream.next();
+
 			if(readTag == XMLStreamConstants.CHARACTERS && !stream.isWhiteSpace()) {
 				chars = stream.getText();
 			}
-			//int elementsSearched = 0;
-			// If we should only check one element at a time, then just look for an ending element
-			if(parseAhead == false) {
-				while(!(name.equals(tagName) && readTag == XMLStreamConstants.END_ELEMENT) && readTag != XMLStreamConstants.END_ELEMENT && readTag != XMLStreamConstants.END_DOCUMENT) {
-					readTag = stream.next();
-					if(readTag == XMLStreamConstants.START_ELEMENT) {
-						tagName = stream.getLocalName(); // or .getName().getLocalPart();
-						// Read any attributes attached to the opening tag
-						attribCount = stream.getAttributeCount();
-						if(attribCount > 0) {
-							this.attributesStack.clear();
-							for(int i = 0; i < attribCount; i++) {
-								this.attributesStack.addAttribute(stream.getAttributeLocalName(i), stream.getAttributeValue(i));
-							}
-						}
-					}
-					if(readTag == XMLStreamConstants.CHARACTERS && !stream.isWhiteSpace()) {
-						chars = stream.getText();
-					}
-					//elementsSearched++;
+
+			// Read one element at a time, then just look for an ending element
+			while(readTag != XMLStreamConstants.END_ELEMENT && readTag != XMLStreamConstants.END_DOCUMENT) {
+				readTag = stream.next();
+				if(readTag == XMLStreamConstants.START_ELEMENT) {
+					tagName = stream.getLocalName(); // or .getName().getLocalPart();
+					throw new IllegalStateException("Found start of tag '" + tagName + "' while reading end of element");
+				}
+				if(readTag == XMLStreamConstants.CHARACTERS && !stream.isWhiteSpace()) {
+					chars = stream.getText();
 				}
 			}
-			// If we should read more than one element in search of the element name we are looking for
-			else {
-				while(!(name.equals(tagName) && readTag == XMLStreamConstants.END_ELEMENT) && readTag != XMLStreamConstants.END_DOCUMENT) {
-					readTag = stream.next();
-					if(readTag == XMLStreamConstants.START_ELEMENT) {
-						tagName = stream.getLocalName(); // or .getName().getLocalPart();
-						// Read any attributes attached to the opening tag
-						attribCount = stream.getAttributeCount();
-						if(attribCount > 0) {
-							this.attributesStack.clear();
-							for(int i = 0; i < attribCount; i++) {
-								this.attributesStack.addAttribute(stream.getAttributeLocalName(i), stream.getAttributeValue(i));
-							}
-						}
-					}
-					if(readTag == XMLStreamConstants.CHARACTERS) {
-						chars = stream.getText();
-					}
-					//elementsSearched++;
-				}
+
+			if(readTag != XMLStreamConstants.END_ELEMENT) {
+				throw new IllegalStateException("Mismatching XML tag read, expected END_ELEMENT, found " + XMLHandler.toString(readTag) + ((readTag == XMLStreamConstants.START_ELEMENT) ? ": " + stream.getLocalName() : ""));
 			}
-			// If the element found does not match the element being searched for, throw an IOException, XMLStreamException
-			if(noElementException && !name.equals(tagName)) {
-				throw new IOException("Mismatch between XML element name '" + name + "' and found element name '" + tagName + "'");
-			}
+
+			// Move to the next element once we read the starting element
+			stream.next();
+
 		} catch(XMLStreamException xmlse) {
 			throw new IOException(xmlse);
 		}
 		// Return the text associated with the matching opening tag
-		return chars;
+		element[0] = tagName;
+		element[1] = chars;
+	}
+
+
+	/** Read an opening XML tag
+	 * @param reader the XML stream reader to read data from
+	 * @param peek true to add closing tags to the list of closing tags, false to read past closing tags
+	 * @param reader the XML read to read the XML elements from
+	 * @param attributes an empty attribute group to fill with attributes attached to the opening tag read
+	 * @param closingTags a list of XML closing tags to add closing tags to if {@code peek} is true.
+	 * false to stop at the first opening element encountered.
+	 * @return the XML opening element/tag read
+	 * @throws IOException if there is an exception reading from the XML input
+	 * stream or if the tag name does not match.
+	 */
+	private static XMLTag readOpeningBlockExact(XMLStreamReader reader, boolean peek, XMLAttributes attributes, List<XMLTag> readClosingTags) throws IOException {
+		String elementName = null;
+		String descriptor = null;
+		int attribCount = 0;
+
+		try {
+			int readTag = reader.getEventType();
+
+			// Read any character events (corresponding to whitespace between elements? is this assumption correct)
+			while(readTag == XMLStreamConstants.CHARACTERS) {
+				readTag = reader.next();
+			}
+
+			// Get the element's name and attributes
+			if(readTag != XMLStreamConstants.START_ELEMENT) {
+				throw new IllegalStateException("Mismatching XML tag read, expected START_ELEMENT, found " + XMLHandler.toString(readTag) + ((readTag == XMLStreamConstants.END_ELEMENT) ? ": " + reader.getLocalName() : ""));
+			}
+
+			elementName = reader.getLocalName(); // or .getName().getLocalPart();
+			// Read any attributes attached to the opening tag
+			attribCount = reader.getAttributeCount();
+			if(attribCount > 0) {
+				boolean foundDescriptor = false;
+				attributes.clear();
+				for(int i = 0; i < attribCount; i++) {
+					// If the attributes contain the tag's descriptor/name, read it
+					if(!foundDescriptor && XMLHandler.DESCRIPTOR_ID.equals(reader.getAttributeLocalName(i))) {
+						foundDescriptor = true;
+						descriptor = reader.getAttributeValue(i);
+					}
+					// Else just read a normal attribute
+					else {
+						attributes.addAttribute(reader.getAttributeLocalName(i), reader.getAttributeValue(i));
+					}
+				}
+			}
+			// Move to the next element once we read the starting element
+			reader.next();
+
+		} catch(XMLStreamException xmlse) {
+			throw new IOException(xmlse);
+		}
+
+		// Create the new element, or leave it null if no valid element name was read
+		XMLTag newTag = null;
+		if(elementName != null) {
+			newTag = new XMLTagImpl(elementName, descriptor, DataHeader.OPENING);
+		}
+		return newTag;
+	}
+
+
+	/** Read an opening XML tag. This method reads past non matching tags until the correct one is found.
+	 * @param reader the XML stream reader to read data from
+	 * @param name the name of the tag to read
+	 * @param peek true to add closing tags to the list of closing tags, false to read past closing tags
+	 * @param reader the XML read to read the XML elements from
+	 * @param attributes an empty attribute group to fill with attributes attached to the opening tag read
+	 * @param closingTags a list of XML closing tags to add closing tags to if {@code peek} is true.
+	 * false to stop at the first opening element encountered.
+	 * @return the XML opening element/tag read
+	 * @throws IOException if there is an exception reading from the XML input
+	 * stream or if the tag name does not match.
+	 */
+	private static XMLTag readOpeningBlockGreedy(XMLStreamReader reader, String name, boolean peek, XMLAttributes attributes, List<XMLTag> readClosingTags) throws IOException {
+		String elementName = null;
+		String descriptor = null;
+		int attribCount = 0;
+
+		try {
+			int readTag = reader.getEventType();
+
+			// Read any character events (corresponding to whitespace between elements? is this assumption correct)
+			if(readTag == XMLStreamConstants.START_ELEMENT) {
+				elementName = reader.getLocalName();
+			}
+
+			// Read ahead, discarding elements until the correct element name is found
+			while(!(readTag == XMLStreamConstants.START_ELEMENT && name.equals(elementName)) && readTag != XMLStreamConstants.END_DOCUMENT) {
+				readTag = reader.next();
+				if(readTag == XMLStreamConstants.START_ELEMENT) {
+					elementName = reader.getLocalName();
+				}
+			}
+
+			// Read any attributes attached to the opening tag
+			attribCount = reader.getAttributeCount();
+			if(attribCount > 0) {
+				boolean foundDescriptor = false;
+				attributes.clear();
+				for(int i = 0; i < attribCount; i++) {
+					// If the attributes contain the tag's descriptor/name, read it
+					if(!foundDescriptor && XMLHandler.DESCRIPTOR_ID.equals(reader.getAttributeLocalName(i))) {
+						foundDescriptor = true;
+						descriptor = reader.getAttributeValue(i);
+					}
+					// Else just read a normal attribute
+					else {
+						attributes.addAttribute(reader.getAttributeLocalName(i), reader.getAttributeValue(i));
+					}
+				}
+			}
+			// Move to the next element once we read the starting element
+			reader.next();
+
+		} catch(XMLStreamException xmlse) {
+			throw new IOException(xmlse);
+		}
+
+		// Create the new element, or leave it null if no valid element name was read
+		XMLTag newTag = null;
+		if(elementName != null) {
+			newTag = new XMLTagImpl(elementName, descriptor, DataHeader.OPENING);
+		}
+		return newTag;
+	}
+
+
+	/** Read a closing tag including any elements between the current element and the closing tag.
+	 * @param reader the XML reader to read closing tags from
+	 * @param tags the list of currently open tags to adjust based on whether a closing tag was found
+	 * to match the last currently open tag on the stack (last index of list)
+	 * @param readClosingTags a list of currently open tags
+	 * @param throwNoTag true to throw an exception if the expected closing tag
+	 * name taken from the top of the {@link tags} stack did not match the
+	 * closing tag name read from the XML stream, false to ignore the
+	 * name of the closing tag read.
+	 * @throws IOException if there is an error reading the closing tag
+	 */
+	private static int readClosingBlockGreedy(XMLStreamReader reader, List<String> tags, List<XMLTag> readClosingTags, boolean throwNoTag) throws IOException {
+		String name = tags.get(tags.size()-1);
+		String chars = null;
+
+		//System.out.println("XML closing tag: " + name);
+
+		// Check if any of the closing tags read by {@link #peekNextHeaderBlock()}
+		// match the current closing tag being read
+		int closingTagCount = readClosingTags.size();
+		if(closingTagCount > 0) {
+			for(int i = 0; i < closingTagCount; i++) {
+				if(readClosingTags.get(i).getHeaderName().equals(name)) {
+					readClosingTags.remove(i);
+					tags.remove(tags.size()-1);
+					//System.out.println("XML closing peek tag: " + name);
+					return 1;
+				}
+			}
+		}
+		// Read ahead for the closing tag, keep reading until the correct closing tag is found,
+		// possibly discarding valuable elements
+		try {
+			int readTag = reader.getEventType();
+
+			while(!(readTag == XMLStreamConstants.END_ELEMENT && name.equals(chars)) && readTag != XMLStreamConstants.END_DOCUMENT) {
+				readTag = reader.next();
+				if(readTag == XMLStreamConstants.END_ELEMENT) {
+					chars = reader.getLocalName(); // or .getName().getLocalPart();
+				}
+			}
+
+			// Check if the next element is an ending element, if so, get the name of the element
+			if(readTag != XMLStreamConstants.END_ELEMENT) {
+				throw new IllegalStateException("Mismatching XML tag read, expected END_ELEMENT, found " + XMLHandler.toString(readTag));
+			}
+
+			chars = reader.getLocalName(); // or .getName().getLocalPart();
+			// Move to the next element once we read the ending element
+			reader.next();
+
+			if(throwNoTag && !name.equals(chars)) {
+				throw new IOException("Could not find '" + name + "' XML tag name, found '" + chars + "' instead");
+			}
+			tags.remove(tags.size()-1);
+		} catch(XMLStreamException xmlse) {
+			throw new IOException(xmlse);
+		}
+		return 1;
 	}
 
 
 	/** Read a header from the specified XML input stream
 	 * @param input the XML input stream to read the header from
 	 */
+	@Deprecated
 	public static final void readHeader(XMLInputReader input) {
 		input.readHeader();
 	}

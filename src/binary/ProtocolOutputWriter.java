@@ -5,8 +5,6 @@ import java.io.DataOutput;
 
 /** {@link ProtocolOutput} implementation wrapper that converting a {@link DataOutput} stream into a
  * {@link ProtocolOutput} stream.
- * It is recommended to encode strings using the {@link ProtocolHandler#STRING_TYPE} type
- * to encode strings that may contain unicode characters.
  * AN {@link ProtocolTransferable} object could be written to a {@link DataOutput} stream using this example code.
  * <p><blockquote><pre class="brush: java">
  * public void writeExternal(ObjectOutput out) throws IOException {

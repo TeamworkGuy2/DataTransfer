@@ -146,7 +146,7 @@ public interface XMLInput extends Closeable {
 	/** Get the group of attributes associated with the last read element or tag 
 	 * @return a group of attributes read when the last XML element was read
 	 */
-	public XMLAttributes getCurrentHeaderBlockAttributes();
+	public XMLAttributes getCurrentBlockHeaderAttributes();
 
 
 	/** Get the number of open XML tags waiting for their corresponding closing tags to be read.
