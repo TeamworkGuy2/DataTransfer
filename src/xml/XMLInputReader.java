@@ -32,13 +32,11 @@ public class XMLInputReader implements XMLInput {
 
 
 	/** An XML input stream parser
-	 * It is recommended to encode strings using the {@link XMLHandler#STRING_TYPE} type
-	 * to encode strings that may contain unicode characters.
 	 * @param reader the XML stream reader to read XML data from
-	 * @param aggressiveParsing <code>true</code> causes the parser to search multiple elements when
+	 * @param aggressiveParsing {@code true} causes the parser to search multiple elements when
 	 * an element name cannot be found.<br/>
-	 * <code>false</code> causes the parser to only search one element regardless of whether the element
-	 * contains the searched for matching tag name or not.
+	 * {@code false} causes the parser to only search one element regardless of whether the element
+	 * contains a matching tag name or not.
 	 * @param throwsNoTagException true causes parser to throw an exception if an opening or closing tag
 	 * cannot be found, false causes the parse to silently ignore the missing tag possibly causing some other
 	 * error to be thrown.
@@ -60,6 +58,8 @@ public class XMLInputReader implements XMLInput {
 	}
 
 
+	/** Read the header element at the beginning of an XML document.
+	 */
 	public void readHeader() {
 		if(xmlReader.getEventType() == XMLStreamConstants.START_DOCUMENT) {
 			try {
@@ -165,7 +165,7 @@ public class XMLInputReader implements XMLInput {
 	}
 
 
-	/** Read an opening XML tag and add a corresponding tag to this reader's internal list of open XML tags
+	/** Read an opening XML tag
 	 * @param name the name of the opening XML tag to read
 	 * @throws IOException if there is an IO or XML related error while reading from the input stream
 	 */
@@ -203,7 +203,7 @@ public class XMLInputReader implements XMLInput {
 	}
 
 
-	/** Read any opening XML tag and add a corresponding tag to this reader's internal list of open XML tags
+	/** Read any opening XML tag
 	 * @return the next opening XML tag read from the XML stream or null if the end of the document has been reached
 	 * @throws IOException if there is an IO error while reading from the input stream
 	 * @throws XMLStreamException if there is a XML error while reading from the to input stream
@@ -217,25 +217,44 @@ public class XMLInputReader implements XMLInput {
 			this.attributesStack = this.peekAttributesStack;
 			tempAttributes.clear();
 			this.peekAttributesStack = tempAttributes;
-			this.tagStack.add(peekHeader.getHeaderName());
 			this.tagsRead++;
-			this.lastOpeningTag = this.peekHeader;
+			XMLTag tag = this.peekHeader;
+			// add the newly read tag to this reader's internal list of open XML tags
+			if(tag.isOpeningHeader()) {
+				this.tagStack.add(peekHeader.getHeaderName());
+				this.lastOpeningTag = this.peekHeader;
+			}
 			this.peekHeader = null;
-			return this.lastOpeningTag;
+			return tag;
 		}
 
 		// Else read the next header as normal
 		// This call reads the next immediate header without checking its name
-		XMLTag newTag = readOpeningBlockExact(xmlReader, false, attributesStack, closingTagsSkipped);
-		this.lastOpeningTag = newTag;
-		if(newTag != null) {
-			this.tagStack.add(newTag.getHeaderName());
+		XMLTag newTag = readBlock(xmlReader, false, attributesStack);
+		// add the newly read tag to this reader's internal list of open XML tags
+		if(newTag != null && newTag.isOpeningHeader()) {
+			this.lastOpeningTag = newTag;
+			if(newTag != null) {
+				this.tagStack.add(newTag.getHeaderName());
+				this.tagsRead++;
+			}
+		}
+		else if(newTag != null) {
 			this.tagsRead++;
+		}
+		else if(newTag == null) {
+			this.lastOpeningTag = null;
 		}
 		return newTag;
 	}
 
 
+	/** Read the next opening or closing tag and return it without modifying the stream.
+	 * The next call to {@link #readOpeningBlock(String)}, {@link #readClosingBlock()}
+	 * or an equivalent method will return this tag.
+	 * @return the tag read from the input stream
+	 * @throws XMLStreamException if there is a XML error while reading from the to input stream
+	 */
 	@Override
 	public XMLTag peekNextBlock() throws IOException {
 		/* If the peek head has not been read, read the next header and save it as the peek header.
@@ -246,7 +265,7 @@ public class XMLInputReader implements XMLInput {
 		 */
 		if(peekHeader == null) {
 			// Peek at the next header
-			XMLTag newTag = readOpeningBlockExact(xmlReader, true, attributesStack, closingTagsSkipped);
+			XMLTag newTag = readBlock(xmlReader, true, attributesStack);
 			peekHeader = newTag;
 		}
 		// Return the new peek header or the current peek header
@@ -254,7 +273,7 @@ public class XMLInputReader implements XMLInput {
 	}
 
 
-	/** Read a closing XML tag for the last read opening XML tag
+	/** Read a closing XML tag from the input stream
 	 * @throws IOException if there is an IO or XML related error reading from the input stream
 	 */
 	@Override
@@ -296,10 +315,12 @@ public class XMLInputReader implements XMLInput {
 		this.tagStack.clear();
 		this.attributesStack.clear();
 		this.tagsRead = -1;
-		try {
-			this.xmlReader.close();
-		} catch (XMLStreamException e) {
-			throw new IOException(e);
+		if(this.xmlReader != null) {
+			try {
+				this.xmlReader.close();
+			} catch (XMLStreamException e) {
+				throw new IOException(e);
+			}
 		}
 		this.tagStack = null;
 		this.attributesStack = null;
@@ -320,15 +341,15 @@ public class XMLInputReader implements XMLInput {
 	}
 
 
-	/** Read the specified element from the specified XML stream.<br/>
-	 * This method reads one element if the constructor's <code>aggressiveParsing</code> parameter was false.
-	 * Else this method reads as many elements as possible until the correct element name is found or the end of
-	 * the document is reached.
-	 * @param stream - the stream to read the element from
-	 * @param name - the name of the element to read and return
+	/** Read a matching element name from the XML stream.<br/>
+	 * This method reads one element if {@code aggressiveParsing} is false.
+	 * Else this method reads as many elements as possible until the correct
+	 * element name is found or the end of the document is reached.
+	 * @param stream the stream to read the element from
+	 * @param name the name of the element to read and return
 	 * @return the character data contained in the specified element
-	 * @throws XMLStreamIOException, XMLStreamException if there is an XML error while reading the data
-	 * @throws IOException, XMLStreamException if there is an error while parsing the XML data
+	 * @throws XMLStreamIOException if there is an XML error while reading the data
+	 * @throws IOException if there is an error while parsing the XML data
 	 */
 	private String readElement(XMLStreamReader stream, String name) throws IOException {
 		// Read the next element
@@ -347,14 +368,18 @@ public class XMLInputReader implements XMLInput {
 	}
 
 
-	/** Read the specified element from the specified XML stream.<br/>
-	 * This method reads one element if the constructor's <code>aggressiveParsing</code> parameter was false.
-	 * Else this method reads as many elements as possible until the correct element name is found or the end of
-	 * the document is reached.
-	 * @param an array of size 2 to put the name and contents of the element read into
-	 * @param element the name of the element to read and return
+	/** Read the next element from the XML stream.<br/>
+	 * This method reads one element if {@code aggressiveParsing} is false.
+	 * Else this method reads as many elements as possible until the correct
+	 * element name is found or the end of the document is reached.
+	 * @param stream the stream to read the element from
+	 * @param element an array of size 2 to store the name and contents of the element
+	 * read in. When this method returns, this array's first index will contain
+	 * the name of the element read, the second index will contain the contents
+	 * of the element read.
 	 * @param debugName the expected name of the element for error messages, null represents any name
-	 * @return the character data contained in the specified element
+	 * @param elementAttribs an {@link XMLAttributes} object that will be cleared
+	 * and filled with the attributes of the element read by this method.
 	 * @throws XMLStreamIOException if there is an XML error while reading the data
 	 * @throws IOException if there is an error while parsing the XML data
 	 */
@@ -420,17 +445,90 @@ public class XMLInputReader implements XMLInput {
 	}
 
 
-	/** Read an opening XML tag
+	/** Read the next opening or closing XML tag
 	 * @param reader the XML stream reader to read data from
-	 * @param peek true to add closing tags to the list of closing tags, false to read past closing tags
+	 * @param peek true to add closing tags to the list of closing tags,
+	 * false to read past closing tags
 	 * @param reader the XML read to read the XML elements from
-	 * @param attributes an empty attribute group to fill with attributes attached to the opening tag read
-	 * @param closingTags a list of XML closing tags to add closing tags to if {@code peek} is true.
-	 * false to stop at the first opening element encountered.
-	 * @return the XML opening element/tag read
+	 * @param attributes an {@link XMLAttributes} object that will be cleared
+	 * and filled with the attributes of the opening tag read by this method.
+	 * @return the opening XML tag read
 	 * @throws IOException if there is an exception reading from the XML input
 	 * stream or if the tag name does not match.
 	 */
+	private static XMLTag readBlock(XMLStreamReader reader, boolean peek, XMLAttributes attributes) throws IOException {
+		String elementName = null;
+		String descriptor = null;
+		int attribCount = 0;
+		int readTag = 0;
+
+		try {
+			readTag = reader.getEventType();
+
+			// Read any character events (corresponding to whitespace between elements? is this assumption correct)
+			while(readTag == XMLStreamConstants.CHARACTERS) {
+				readTag = reader.next();
+			}
+
+			// Get the element's name and attributes
+			while(readTag != XMLStreamConstants.END_ELEMENT && readTag != XMLStreamConstants.START_ELEMENT && readTag != XMLStreamConstants.END_DOCUMENT) {
+				readTag = reader.next();
+			}
+
+			if(readTag == XMLStreamConstants.START_ELEMENT || readTag == XMLStreamConstants.END_ELEMENT) {
+				elementName = reader.getLocalName(); // or .getName().getLocalPart();
+			}
+			// Read any attributes attached to the opening tag
+			if(readTag == XMLStreamConstants.START_ELEMENT) {
+				attribCount = reader.getAttributeCount();
+				if(attribCount > 0) {
+					boolean foundDescriptor = false;
+					attributes.clear();
+					for(int i = 0; i < attribCount; i++) {
+						// If the attributes contain the tag's descriptor/name, read it
+						if(!foundDescriptor && XMLHandler.DESCRIPTOR_ID.equals(reader.getAttributeLocalName(i))) {
+							foundDescriptor = true;
+							descriptor = reader.getAttributeValue(i);
+						}
+						// Else just read a normal attribute
+						else {
+							attributes.addAttribute(reader.getAttributeLocalName(i), reader.getAttributeValue(i));
+						}
+					}
+				}
+			}
+			// Move to the next element once we read the starting element
+			if(readTag != XMLStreamConstants.END_DOCUMENT) {
+				reader.next();
+			}
+
+		} catch(XMLStreamException xmlse) {
+			throw new IOException(xmlse);
+		}
+
+		// Create the new element, or leave it null if no valid element name was read
+		XMLTag newTag = null;
+		if(elementName != null) {
+			boolean openingTag = (readTag == XMLStreamConstants.START_ELEMENT ? DataHeader.OPENING : (readTag == XMLStreamConstants.END_ELEMENT ? DataHeader.CLOSING : false));
+			newTag = new XMLTagImpl(elementName, descriptor, openingTag);
+		}
+		return newTag;
+	}
+
+
+	/** Try to read the next opening XML tag. Only one tag is read.
+	 * @param reader the XML stream reader to read data from
+	 * @param peek true to add closing tags to the list of closing tags,
+	 * false to read past closing tags
+	 * @param attributes an {@link XMLAttributes} object that will be cleared
+	 * and filled with the attributes of the opening tag read by this method.
+	 * @param closingTags a list of XML closing tags to add closing tags to if
+	 * {@code peek} is true. false to stop at the first opening tag encountered.
+	 * @return the opening XML tag read
+	 * @throws IOException if there is an exception reading from the XML input
+	 * stream or if the tag name does not match.
+	 */
+	@SuppressWarnings("unused")
 	private static XMLTag readOpeningBlockExact(XMLStreamReader reader, boolean peek, XMLAttributes attributes, List<XMLTag> readClosingTags) throws IOException {
 		String elementName = null;
 		String descriptor = null;
@@ -483,15 +581,17 @@ public class XMLInputReader implements XMLInput {
 	}
 
 
-	/** Read an opening XML tag. This method reads past non matching tags until the correct one is found.
+	/** Read a matching opening XML tag. This method reads past non matching
+	 * tags until a matching one is found.
 	 * @param reader the XML stream reader to read data from
 	 * @param name the name of the tag to read
-	 * @param peek true to add closing tags to the list of closing tags, false to read past closing tags
-	 * @param reader the XML read to read the XML elements from
-	 * @param attributes an empty attribute group to fill with attributes attached to the opening tag read
-	 * @param closingTags a list of XML closing tags to add closing tags to if {@code peek} is true.
-	 * false to stop at the first opening element encountered.
-	 * @return the XML opening element/tag read
+	 * @param peek true to add closing tags to the list of closing tags,
+	 * false to read past closing tags
+	 * @param attributes an {@link XMLAttributes} object that will be cleared
+	 * and filled with the attributes of the opening tag read by this method.
+	 * @param closingTags a list of XML closing tags to add closing tags to if
+	 * {@code peek} is true. false to stop at the first opening tag encountered.
+	 * @return the opening XML tag read
 	 * @throws IOException if there is an exception reading from the XML input
 	 * stream or if the tag name does not match.
 	 */
@@ -549,15 +649,16 @@ public class XMLInputReader implements XMLInput {
 	}
 
 
-	/** Read a closing tag including any elements between the current element and the closing tag.
+	/** Read a closing tag including any elements between the current element
+	 * and the closing tag.
 	 * @param reader the XML reader to read closing tags from
-	 * @param tags the list of currently open tags to adjust based on whether a closing tag was found
-	 * to match the last currently open tag on the stack (last index of list)
-	 * @param readClosingTags a list of currently open tags
+	 * @param tags the list of currently open tags to remove from if a closing
+	 * tag is found to match the last currently open tag on the stack (last index of list).
+	 * @param readClosingTags a list of closing tags already read by other methods
 	 * @param throwNoTag true to throw an exception if the expected closing tag
-	 * name taken from the top of the {@link tags} stack did not match the
+	 * name taken from the top of the {@link tags} stack does not match the
 	 * closing tag name read from the XML stream, false to ignore the
-	 * name of the closing tag read.
+	 * name of the closing tag read from the XML strea.
 	 * @throws IOException if there is an error reading the closing tag
 	 */
 	private static int readClosingBlockGreedy(XMLStreamReader reader, List<String> tags, List<XMLTag> readClosingTags, boolean throwNoTag) throws IOException {
@@ -608,15 +709,6 @@ public class XMLInputReader implements XMLInput {
 			throw new IOException(xmlse);
 		}
 		return 1;
-	}
-
-
-	/** Read a header from the specified XML input stream
-	 * @param input the XML input stream to read the header from
-	 */
-	@Deprecated
-	public static final void readHeader(XMLInputReader input) {
-		input.readHeader();
 	}
 
 }
