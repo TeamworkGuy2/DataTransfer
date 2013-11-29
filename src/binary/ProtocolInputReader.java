@@ -107,7 +107,7 @@ import dataTransfer.DataHeader;
  * Data types can be found in {@link ProtocolHandler}, such as {@link ProtocolHandler#BYTE_TYPE}, and {@link ProtocolHandler#ARRAY_TYPE} for arrays.
  * @author TeamworkGuy2
  * @since 2013-7-18
- * TODO add support for {@link #peekNextHeaderBlock()} to work properly with {@link #readClosingBlock()}
+ * TODO add support for {@link #peekNextBlock()} to work properly with {@link #readClosingBlock()}
  */
 public class ProtocolInputReader implements ProtocolInput {
 	// three integers per stack data structure

@@ -130,7 +130,7 @@ import xml.XMLTagImpl;
  * Data types can be found in {@link XMLHandler}, such as {@link XMLHandler#BYTE_TYPE}, and {@link XMLHandler#ARRAY_TYPE} for arrays.
  * @author TeamworkGuy2
  * @since 2013-2-1
- * TODO add support for {@link #peekNextHeaderBlock()} to work properly with {@link #readClosingBlock()}
+ * TODO add support for {@link #peekNextBlock()} to work properly with {@link #readClosingBlock()}
  */
 public class XMLInputStream implements XMLInput {
 	private DataInput in;

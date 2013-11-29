@@ -19,6 +19,8 @@ import java.util.Arrays;
  * of {@link DataOutput}.<br/>
  * Basically it is a random access data input and output stream based
  * on a byte array rather than a file or socket.
+ * TODO one other copy of this class in DataStructures.src.dataCollection,
+ * if changes are made to this class, that class should be modified.
  * @author TeamworkGuy2
  * @since 2013-8-3
  */
@@ -275,6 +277,7 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 		return (readByte() & 0xFF);
 	}
 
+
 	/** Copy as many bytes as possible from this buffer starting at the
 	 * buffer's current position into the specified destination array
 	 * @param dst the destination array to write the bytes to
@@ -337,8 +340,6 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** See the sk
-	 */
 	@Override
 	public int skipBytes(int n) {
 		checkAndRead(n); // Adds n to this buffer's position!

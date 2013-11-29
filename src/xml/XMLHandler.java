@@ -5,16 +5,12 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.Externalizable;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
@@ -92,45 +88,7 @@ public class XMLHandler {
 	private static final String XML_HEADER_CLOSING = "\"?>" + lineSeparator;
 	private static final String XML_VERSION = "1.0";
 	private static final String[] charsetNames = new String[] {"UTF-8", "US-ASCII", "UTF-16"};
-	private static XMLInputFactory factory;
-
-
-	/** Read an Externalizable Java object from a file
-	 * @param externalizableObj - the object to initialize with the Externalizable object found in the file
-	 * @param file - file to read the Externalizable object from
-	 * @throws SAXException if the XML parser encounters an error
-	 * @throws FileNotFoundException if the specified XML file to read can not be found 
-	 * @throws IOException if an error occurs while reading the XML file
-	 * @throws ClassNotFoundException if the class of the object being deserialized could not be found
-	 */
-	public static Externalizable readExternal(Externalizable externalizableObj, File file) throws FileNotFoundException, IOException, ClassNotFoundException {
-		InputStream inputSource = new BufferedInputStream(new FileInputStream(file));
-		ObjectInputStream in = new ObjectInputStream(inputSource);
-		// Recover the object
-		externalizableObj = (Externalizable)in.readObject();
-		//externalizableObj.readExternal(in);
-		in.close();
-		inputSource.close();
-		return externalizableObj;
-	}
-
-
-	/** Write an Externalizable Java object to a file
-	 * @param externalizableObj - the Externalizable object to write to the file
-	 * @param file - the file to write the object to
-	 * @return the Externalizable object written to the file
-	 * @throws IOException if there is an error writing the object to the file
-	 */
-	public static Externalizable writeExternal(Externalizable externalizableObj, File file) throws IOException {
-		OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(file));
-		ObjectOutputStream out = new ObjectOutputStream(outputStream);
-		// Save the object
-		out.writeObject(externalizableObj);
-		//externalizableObj.writeExternal(out);
-		out.close();
-		outputStream.close();
-		return externalizableObj;
-	}
+	private static volatile XMLInputFactory factory;
 
 
 	/** Get the default XML stream factory
@@ -146,45 +104,56 @@ public class XMLHandler {
 
 	/** Read an array of XML objects from the specified input file.
 	 * @param file the file to read the XML objects from.
-	 * This stream is not closed when the method returns.
+	 * @param doBuffer true to wrap the output stream in a buffered output stream,
+	 * false to use it without modification
+	 * @param charset the charset to use for textual data, if null the default US-ASCII charset is used.
 	 * @param textFormat true creates an XML text reader, false creates a binary XML input stream
 	 * @param xmlTag the opening and closing tag name to read from the XML stream
 	 * @param descriptor an optional descriptor to associate with XML tags
 	 * @param xmlObjects the array of XML objects to read from the input stream
-	 * @param aggressiveParsing - <code>True</code> causes the parser to read multiple elements when an element
+	 * @param aggressiveParsing <code>True</code> causes the parser to read multiple elements when an element
 	 * cannot be found. <code>False</code> causes the parser to only read one element regardless of whether the
 	 * element contains the matching tag name or not.
-	 * @param throwsNoTagException - <code>True</code> causes the parser to throw an exception if an opening or
+	 * @param throwsNoTagException <code>True</code> causes the parser to throw an exception if an opening or
 	 * closing tag cannot be found. <code>False</code> causes the parser to silently ignore the missing tag.
 	 * @throws Exception if there is an error reading the XML object from the input stream
 	 */
-	public static void readXMLObjects(File file, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
+	public static void readXMLObjects(File file, boolean doBuffer, Charset charset, boolean textFormat,
+			String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
 		InputStream input = new BufferedInputStream(new FileInputStream(file));
-		readXMLObjectsInternal(true, input, textFormat, xmlTag, descriptor, xmlObjects, aggressiveParsing, throwsNoTagException);
+		readXMLObjectsInternal(input, doBuffer, true, charset, textFormat, xmlTag, descriptor,
+				xmlObjects, aggressiveParsing, throwsNoTagException);
 	}
 
 
 	/** Read an array of XML objects from the specified input stream.
 	 * @param input the input stream to read the XML objects from.
 	 * This stream is not closed when the method returns.
+	 * @param doBuffer true to wrap the output stream in a buffered output stream,
+	 * false to use it without modification
+	 * @param charset the charset to use for textual data, if null the default US-ASCII charset is used.
 	 * @param textFormat true creates an XML text reader, false creates a binary XML input stream
 	 * @param xmlTag the opening and closing tag name to read for the XML stream
 	 * @param descriptor an optional descriptor to associate with the XML tag
 	 * @param xmlObjects the array of XML objects to read from the input stream
-	 * @param aggressiveParsing - <code>True</code> causes the parser to read multiple elements when an element
+	 * @param aggressiveParsing <code>True</code> causes the parser to read multiple elements when an element
 	 * cannot be found. <code>False</code> causes the parser to only read one element regardless of whether the
 	 * element contains the matching tag name or not.
-	 * @param throwsNoTagException - <code>True</code> causes the parser to throw an exception if an opening or
+	 * @param throwsNoTagException <code>True</code> causes the parser to throw an exception if an opening or
 	 * closing tag cannot be found. <code>False</code> causes the parser to silently ignore the missing tag.
 	 * @throws Exception if there is an error reading the XML objects from the input stream
 	 */
-	public static void readXMLObjects(InputStream input, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
-		readXMLObjectsInternal(false, input, textFormat, xmlTag, descriptor, xmlObjects, aggressiveParsing, throwsNoTagException);
+	public static void readXMLObjects(InputStream input, boolean doBuffer, Charset charset, boolean textFormat,
+			String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
+		readXMLObjectsInternal(input, doBuffer, false, charset, textFormat, xmlTag, descriptor,
+				xmlObjects, aggressiveParsing, throwsNoTagException);
 	}
 
 
-	private static void readXMLObjectsInternal(boolean close, InputStream input, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
-		XMLInput in = createXMLInput(input, textFormat, aggressiveParsing, throwsNoTagException);
+	private static void readXMLObjectsInternal(InputStream input, boolean doBuffer,
+			boolean close, Charset charset, boolean textFormat, String xmlTag, String descriptor,
+			XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
+		XMLInput in = createXMLInput(input, doBuffer, charset, textFormat, aggressiveParsing, throwsNoTagException);
 		if(textFormat == true) {
 			XMLInputFactory xmlFactory = getXMLFactory();
 			XMLStreamReader reader = xmlFactory.createXMLStreamReader(input, defaultCharset.name());
@@ -219,17 +188,20 @@ public class XMLHandler {
 
 	/** Write an array of XML objects to the specified output file.
 	 * Does not write an XML header before the first element.
-	 * Does not close or clear the output stream once complete.
 	 * @param file the file to write the XML objects to
+	 * @param doBuffer true to wrap the output stream in a buffered output stream,
+	 * false to use it without modification
+	 * @param charset the charset to use for textual data, if null the default US-ASCII charset is used.
 	 * @param textFormat true creates an XML text writer, false creates a binary XML output stream
 	 * @param xmlTag the opening and closing tag name to write as the opening and closing tags for the XML file
 	 * @param descriptor an optional descriptor to associate with the XML tags written
 	 * @param xmlObjects the array of XML objects to write to the file
 	 * @throws Exception if there is an error saving the XML object
 	 */
-	public static void writeXMLObjects(File file, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
+	public static void writeXMLObjects(File file, boolean doBuffer, Charset charset, boolean textFormat,
+			String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
 		OutputStream stream = new BufferedOutputStream(new FileOutputStream(file));
-		writeXMLObjectsInternal(true, stream, textFormat, xmlTag, descriptor, xmlObjects);
+		writeXMLObjectsInternal(stream, doBuffer, true, charset, textFormat, xmlTag, descriptor, xmlObjects);
 	}
 
 
@@ -237,19 +209,25 @@ public class XMLHandler {
 	 * Writes an XML header before the first element.
 	 * Does not close or clear the output stream once complete.
 	 * @param output the output stream to write the XML objects to
+	 * @param doBuffer true to wrap the output stream in a buffered output stream,
+	 * false to use it without modification
+	 * @param charset the charset to use for textual data, if null the default US-ASCII charset is used.
 	 * @param textFormat true creates an XML text writer, false creates a binary XML output stream
 	 * @param xmlTag the opening and closing tag name to write as the opening and closing tags for the XML file
 	 * @param descriptor an optional descriptor to associate with the XML tags to write
 	 * @param xmlObjects the array of XML objects to write to the file
 	 * @throws Exception if there is an error saving the XML object
 	 */
-	public static void writeXMLObjects(OutputStream output, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
-		writeXMLObjectsInternal(false, output, textFormat, xmlTag, descriptor, xmlObjects);
+	public static void writeXMLObjects(OutputStream output, boolean doBuffer, Charset charset, boolean textFormat,
+			String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
+		writeXMLObjectsInternal(output, doBuffer, false, charset, textFormat, xmlTag, descriptor, xmlObjects);
 	}
 
 
-	private static void writeXMLObjectsInternal(boolean close, OutputStream output, boolean textFormat, String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
-		XMLOutput out = createXMLOutput(output, textFormat);
+	private static void writeXMLObjectsInternal(OutputStream output, boolean doBuffer,
+			boolean close, Charset charset, boolean textFormat,
+			String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
+		XMLOutput out = createXMLOutput(output, doBuffer, charset, textFormat);
 		if(out instanceof XMLOutputWriter) {
 			((XMLOutputWriter)out).writeHeader();
 		}
@@ -271,31 +249,42 @@ public class XMLHandler {
 
 	/** Create an XML (text or binary) input stream from the specified input stream
 	 * @param input the input stream to create an XML input stream from
+	 * @param doBuffer true to wrap the input stream in a buffered input stream,
+	 * false to use it without modification
+	 * @param charset the charset to use for textual data, if null the default US-ASCII charset is used.
 	 * @param textFormat true to create an XML text reader, false to create a
 	 * binary XML input stream
 	 * @return the XML input stream created from the input stream
-	 * @param aggressiveParsing - <code>True</code> causes the parser to read multiple elements when an element
+	 * @param aggressiveParsing <code>True</code> causes the parser to read multiple elements when an element
 	 * cannot be found. <code>False</code> causes the parser to only read one element regardless of whether the
 	 * element contains the matching tag name or not.
-	 * @param throwsNoElementException - <code>True</code> causes the parser to throw an exception if an element name
-	 * cannot be found. <code>False</code> causes the parser to silently return null when unable to parse an element.
-	 * @param throwsNoTagException - <code>True</code> causes the parser to throw an exception if an opening or
+	 * @param throwsNoTagException <code>True</code> causes the parser to throw an exception if an opening or
 	 * closing tag cannot be found. <code>False</code> causes the parser to silently ignore the missing tag.
 	 * @throws IOException if there is an error creating the XML input stream
 	 */
-	public static XMLInput createXMLInput(InputStream input, boolean textFormat, boolean aggressiveParsing, boolean throwsNoTagException) throws IOException {
+	public static XMLInput createXMLInput(InputStream input, boolean doBuffer, Charset charset, boolean textFormat,
+			boolean aggressiveParsing, boolean throwsNoTagException) throws IOException {
 		XMLInput in = null;
+		if(charset == null) {
+			charset = defaultCharset;
+		}
 		if(textFormat == true) {
 			XMLInputFactory xmlFactory = getXMLFactory();
 			XMLStreamReader reader;
+			if(doBuffer == true) {
+				input = new BufferedInputStream(input);
+			}
 			try {
-				reader = xmlFactory.createXMLStreamReader(input, defaultCharset.name());
+				reader = xmlFactory.createXMLStreamReader(input, charset.name());
 			} catch (XMLStreamException e) {
 				throw new IOException(e);
 			}
 			in = new XMLInputReader(reader, aggressiveParsing, throwsNoTagException);
 		}
 		else {
+			if(doBuffer == true) {
+				input = new BufferedInputStream(input);
+			}
 			in = new XMLInputStream(new DataInputStream(input));
 		}
 		return in;
@@ -304,18 +293,30 @@ public class XMLHandler {
 
 	/** Create an XML (text or binary) output stream from the specified output stream
 	 * @param output the output stream to create an XML output stream from
+	 * @param doBuffer true to wrap the output stream in a buffered output stream,
+	 * false to use it without modification
+	 * @param charset the charset to use for textual data, if null the default US-ASCII charset is used.
 	 * @param textFormat true to create an XML text writer, false to create a
 	 * binary XML output stream
 	 * @return the XML output stream created from the output stream
 	 * @throws IOException if there is an error creating the XML output stream
 	 */
-	public static XMLOutput createXMLOutput(OutputStream output, boolean textFormat) {
+	public static XMLOutput createXMLOutput(OutputStream output, boolean doBuffer, Charset charset, boolean textFormat) {
 		XMLOutput out = null;
+		if(charset == null) {
+			charset = defaultCharset;
+		}
 		if(textFormat == true) {
-			Writer writer = new BufferedWriter(new OutputStreamWriter(output, defaultCharset));
-			out = new XMLOutputWriter(writer, defaultCharset);
+			Writer writer = new OutputStreamWriter(output, charset);
+			if(doBuffer == true) {
+				writer = new BufferedWriter(writer);
+			}
+			out = new XMLOutputWriter(writer, charset);
 		}
 		else {
+			if(doBuffer == true) {
+				output = new BufferedOutputStream(output);
+			}
 			out = new XMLOutputStream(new DataOutputStream(output));
 		}
 		return out;
