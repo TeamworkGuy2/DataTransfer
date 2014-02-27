@@ -6,10 +6,11 @@ import dataTransfer.DataHeader;
  * @author TeamworkGuy2
  * @since 2013-8-30
  */
-public class XMLTagImpl implements XMLTag {
+public class XmlTagImpl implements XmlTag {
 	private String tagName;
 	private String descriptor;
 	private boolean openingHeader;
+
 
 	/** Create an XML tag block
 	 * @param tagName the name of the parent XML tag surrounding the XML
@@ -19,7 +20,7 @@ public class XMLTagImpl implements XMLTag {
 	 * @param openingHeader true if this header represents an opening tag,
 	 * false if it represents a closing header.
 	 */
-	public XMLTagImpl(String tagName, String descriptor, boolean openingHeader) {
+	public XmlTagImpl(String tagName, String descriptor, boolean openingHeader) {
 		this.tagName = tagName;
 		this.descriptor = descriptor;
 		this.openingHeader = openingHeader;

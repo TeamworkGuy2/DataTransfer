@@ -6,8 +6,8 @@ import java.util.List;
 
 import dataTransfer.DataHeader;
 
-/** {@link ProtocolInput} implementation wrapper that converts a {@link DataInput} stream into an
- * {@link ProtocolInput} stream.
+/** {@link ProtocolInput} implementation wrapper that converts a {@link DataInput} stream
+ * into a {@link ProtocolInput} stream.
  * For example a {@link DataInput} stream could be converted to an {@link ProtocolTransferable} object via this code.
  * <p><blockquote><pre class="brush: java">
  * public void readExternal(ObjectInput in) throws IOException {
@@ -104,10 +104,12 @@ import dataTransfer.DataHeader;
  * 	attribute block (if the attribute bit is set) - contains variable number of attributes
  * 	data block (if the data bit is set) - contains tag data
  * </pre>
- * Data types can be found in {@link ProtocolHandler}, such as {@link ProtocolHandler#BYTE_TYPE}, and {@link ProtocolHandler#ARRAY_TYPE} for arrays.
+ * Data types can be found in {@link ProtocolHandler}, such as {@link ProtocolHandler#BYTE_TYPE},
+ * and {@link ProtocolHandler#ARRAY_TYPE} for arrays.
+ * TODO add support for {@link #peekNextBlock()} to work properly with {@link #readClosingBlock()}
  * @author TeamworkGuy2
  * @since 2013-7-18
- * TODO add support for {@link #peekNextBlock()} to work properly with {@link #readClosingBlock()}
+ * @see ProtocolInput
  */
 public class ProtocolInputReader implements ProtocolInput {
 	// three integers per stack data structure

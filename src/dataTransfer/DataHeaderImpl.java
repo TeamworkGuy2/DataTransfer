@@ -10,7 +10,8 @@ public class DataHeaderImpl implements DataHeader {
 	private final String descriptor;
 	private final boolean openingHeader;
 
-	/** Create a simple data header containing a name and ID.
+
+	/** Create a data header containing a name and ID.
 	 * @param name the name of the data header
 	 * @param id the integer ID of the data header
 	 * @param descriptor an optional descriptor to associate with this data header

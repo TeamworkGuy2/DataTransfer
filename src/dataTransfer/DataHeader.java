@@ -1,6 +1,6 @@
 package dataTransfer;
 
-/** A header for a check of data.
+/** A header for a chunk of data.
  * Used by {@link DataTransferInput} and {@link DataTransferOutput}.
  * @author TeamworkGuy2
  * @since 2013-8-30
@@ -42,7 +42,7 @@ public interface DataHeader {
 	 * Data header descriptors do not matter when comparing data headers.<br/>
 	 * For example, two headers:<br/>
 	 * <table border="1">
-	 * <tr><td>header 1</td><td>header 2</td><td>equals</td></tr>
+	 * <tr><td>header 1</td><td>header 2</td><td>equals()</td></tr>
 	 * <tr><td>(23, "item")</td><td>(23, "item")</td><td>true</td></tr>
 	 * <tr><td>(23, "item")</td><td>(-1, "item")</td><td>true</td></tr>
 	 * <tr><td>(-1, "item")</td><td>(-1, "item")</td><td>true</td></tr>

@@ -4,10 +4,21 @@ import java.io.IOException;
 
 import dataTransfer.DataTransferInput;
 
+/** A wrapper that converts a {@link ProtocolInput} stream into a {@link DataTransferInput} stream.
+ * This can be done without data loss since a ProtocolInput stream provides an auxiliary {@code name} parameter
+ * when writing to the stream which the DataTransferInput stream can safely drop.
+ * @author TeamworkGuy2
+ * @since 2013-9-22
+ * @see DataTransferInput
+ */
 public class ProtocolDataInput implements DataTransferInput {
 	private ProtocolInput input;
 
 
+	/**
+	 * @param input the {@link ProtocolInput} stream to read from when this
+	 * wrapper's read methods are called.
+	 */
 	public ProtocolDataInput(ProtocolInput input) {
 		this.input = input;
 	}

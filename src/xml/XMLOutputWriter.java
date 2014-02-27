@@ -9,12 +9,12 @@ import java.util.List;
 
 import javax.xml.bind.DatatypeConverter;
 
-/** {@link XMLOutput} implementation for writing XML text data to a {@link Writer}.
+/** {@link XmlOutput} implementation for writing XML text data to a {@link Writer}.
  * This class allows XML opening and closing tags to be written as well as strings and basic data types.
  * @author TeamworkGuy2
  * @since 2013-2-1
  */
-public class XMLOutputWriter implements XMLOutput, Closeable {
+public class XmlOutputWriter implements XmlOutput, Closeable {
 	private static char[] indentation = new char[] {'\t', '\t', '\t', '\t', '\t', '\t', '\t', '\t',
 		'\t', '\t', '\t', '\t', '\t', '\t', '\t', '\t'};
 	//private static final String indentationStep = "\t";
@@ -29,11 +29,11 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 	private int indentationCount;
 
 
-	/** XMLOutputWriter, basic implementation of {@link XMLOutput}
+	/** XmlOutputWriter, basic implementation of {@link XmlOutput}
 	 * @param writer - the writer to write data to
 	 * @param charset - the charset that the writer is using
 	 */
-	public XMLOutputWriter(Writer writer, Charset charset) {
+	public XmlOutputWriter(Writer writer, Charset charset) {
 		this.output = writer;
 		this.tagStack = new ArrayList<String>();
 		this.tagsWritten = 0;
@@ -43,7 +43,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	public void writeHeader() throws IOException {
-		this.output.write(XMLHandler.xmlHeader(charset));
+		this.output.write(XmlHandler.xmlHeader(charset));
 	}
 
 
@@ -57,7 +57,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	@Override
-	public void write(String name, byte[] b, XMLAttributes attributes) throws IOException {
+	public void write(String name, byte[] b, XmlAttributes attributes) throws IOException {
 		pushTagNoLine(name, attributes);
 		String base64 = DatatypeConverter.printBase64Binary(b);
 		this.output.write(base64);
@@ -77,7 +77,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	@Override
-	public void write(String name, byte[] b, int off, int len, XMLAttributes attributes) throws IOException {
+	public void write(String name, byte[] b, int off, int len, XmlAttributes attributes) throws IOException {
 		pushTagNoLine(name, attributes);
 		byte[] bytes = new byte[len];
 		System.arraycopy(b, 0, bytes, 0, len);
@@ -96,7 +96,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	@Override
-	public void writeBoolean(String name, boolean b, XMLAttributes attributes) throws IOException {
+	public void writeBoolean(String name, boolean b, XmlAttributes attributes) throws IOException {
 		pushTagNoLine(name, attributes);
 		this.output.write(b == true ? "true" : "false");
 		popTagNoLine();
@@ -112,7 +112,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	@Override
-	public void writeByte(String name, byte v, XMLAttributes attributes) throws IOException {
+	public void writeByte(String name, byte v, XmlAttributes attributes) throws IOException {
 		pushTagNoLine(name, attributes);
 		this.output.write((byte)v);
 		popTagNoLine();
@@ -128,7 +128,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	@Override
-	public void writeChar(String name, char v, XMLAttributes attributes) throws IOException {
+	public void writeChar(String name, char v, XmlAttributes attributes) throws IOException {
 		pushTagNoLine(name, attributes);
 		this.output.write((char)v);
 		popTagNoLine();
@@ -144,7 +144,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	@Override
-	public void writeDouble(String name, double d, XMLAttributes attributes) throws IOException {
+	public void writeDouble(String name, double d, XmlAttributes attributes) throws IOException {
 		pushTagNoLine(name, attributes);
 		this.output.write(Double.toString(d));
 		popTagNoLine();
@@ -160,7 +160,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	@Override
-	public void writeFloat(String name, float v, XMLAttributes attributes) throws IOException {
+	public void writeFloat(String name, float v, XmlAttributes attributes) throws IOException {
 		pushTagNoLine(name, attributes);
 		this.output.write(Float.toString(v));
 		popTagNoLine();
@@ -176,7 +176,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	@Override
-	public void writeInt(String name, int v, XMLAttributes attributes) throws IOException {
+	public void writeInt(String name, int v, XmlAttributes attributes) throws IOException {
 		pushTagNoLine(name, attributes);
 		this.output.write(Integer.toString(v));
 		popTagNoLine();
@@ -192,7 +192,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	@Override
-	public void writeLong(String name, long v, XMLAttributes attributes) throws IOException {
+	public void writeLong(String name, long v, XmlAttributes attributes) throws IOException {
 		pushTagNoLine(name, attributes);
 		this.output.write(Long.toString(v));
 		popTagNoLine();
@@ -208,7 +208,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	@Override
-	public void writeShort(String name, short v, XMLAttributes attributes) throws IOException {
+	public void writeShort(String name, short v, XmlAttributes attributes) throws IOException {
 		pushTagNoLine(name, attributes);
 		this.output.write(Short.toString((short)v));
 		popTagNoLine();
@@ -224,7 +224,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	@Override
-	public void writeUTF(String name, String s, XMLAttributes attributes) throws IOException {
+	public void writeUTF(String name, String s, XmlAttributes attributes) throws IOException {
 		pushTagNoLine(name, attributes);
 		this.output.write(s);
 		popTagNoLine();
@@ -238,7 +238,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 
 
 	@Override
-	public void writeOpeningBlock(String name, XMLAttributes attributes) throws IOException {
+	public void writeOpeningBlock(String name, XmlAttributes attributes) throws IOException {
 		writeOpeningBlock(name, (String)null, attributes);
 	}
 
@@ -257,7 +257,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 		out.write(name);
 		if(descriptor != null) {
 			out.write(' ');
-			out.write(XMLHandler.DESCRIPTOR_ID);
+			out.write(XmlHandler.DESCRIPTOR_ID);
 			out.write("=\"");
 			out.write(descriptor);
 			out.write('\"');
@@ -276,7 +276,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
 	@Override
-	public void writeOpeningBlock(String name, String descriptor, XMLAttributes attributes) throws IOException {
+	public void writeOpeningBlock(String name, String descriptor, XmlAttributes attributes) throws IOException {
 		Writer out = this.output;
 		writeIndentation(out, indentationCount);
 		this.indentationCount++;
@@ -285,7 +285,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 		// Write the descriptor and attributes
 		if(descriptor != null) {
 			out.write(' ');
-			out.write(XMLHandler.DESCRIPTOR_ID);
+			out.write(XmlHandler.DESCRIPTOR_ID);
 			out.write("=\"");
 			out.write(descriptor);
 			out.write('\"');
@@ -397,7 +397,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 	 * @param name - the name of the XML tag to write
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
-	private void pushTagNoLine(String name, XMLAttributes attributes) throws IOException {
+	private void pushTagNoLine(String name, XmlAttributes attributes) throws IOException {
 		Writer out = this.output;
 		writeIndentation(out, indentationCount);
 		out.write(OPEN);
@@ -459,7 +459,7 @@ public class XMLOutputWriter implements XMLOutput, Closeable {
 	 * @throws IOException if there is an error writing the header to the
 	 * XML output stream
 	 */
-	public static final void writeHeader(XMLOutputWriter output) throws IOException {
+	public static final void writeHeader(XmlOutputWriter output) throws IOException {
 		output.writeHeader();
 	}
 

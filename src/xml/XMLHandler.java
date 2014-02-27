@@ -20,12 +20,12 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import xml.binary.XMLInputStream;
-import xml.binary.XMLOutputStream;
+import xml.binary.XmlInputStream;
+import xml.binary.XmlOutputStream;
 
 /** XML handler that parses an XML file and hands off control to subclasses when certain opening and closing tags are encountered
  * PairList - sometime in 2012, used modified list/map to store object fields and pass them to an reader/writer
- * XMLInput/Output - 2013-2-20, switch to a custom reader/writer interface that allows objects to write whatever.<br/>
+ * XmlInput/Output - 2013-2-20, switch to a custom reader/writer interface that allows objects to write whatever.<br/>
  * <br/>
  * Data type bits x xxxx, the high bit defines whether the data type is an array,
  * the lower 4 bits define the data type.<br/>
@@ -46,7 +46,7 @@ import xml.binary.XMLOutputStream;
  * @author TeamworkGuy2
  * @since 2013-2-20
  */
-public class XMLHandler {
+public class XmlHandler {
 	/** Used to identify the mask for all data type values including the <code>ARRAY_TYPE</code> */
 	public static final int ANY_TYPE = 0x1F;
 	/** Used to identify the mask for data type values excluding arrays such as <code>ARRAY_TYPE</code> */
@@ -94,7 +94,7 @@ public class XMLHandler {
 	/** Get the default XML stream factory
 	 * @return the default XML factory for this XML handler
 	 */
-	private static final synchronized XMLInputFactory getXMLFactory() {
+	static final synchronized XMLInputFactory getXMLFactory() {
 		if(factory == null) {
 			factory = XMLInputFactory.newFactory();
 		}
@@ -119,7 +119,7 @@ public class XMLHandler {
 	 * @throws Exception if there is an error reading the XML object from the input stream
 	 */
 	public static void readXMLObjects(File file, boolean doBuffer, Charset charset, boolean textFormat,
-			String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
+			String xmlTag, String descriptor, Xmlable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
 		InputStream input = new BufferedInputStream(new FileInputStream(file));
 		readXMLObjectsInternal(input, doBuffer, true, charset, textFormat, xmlTag, descriptor,
 				xmlObjects, aggressiveParsing, throwsNoTagException);
@@ -144,7 +144,7 @@ public class XMLHandler {
 	 * @throws Exception if there is an error reading the XML objects from the input stream
 	 */
 	public static void readXMLObjects(InputStream input, boolean doBuffer, Charset charset, boolean textFormat,
-			String xmlTag, String descriptor, XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
+			String xmlTag, String descriptor, Xmlable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
 		readXMLObjectsInternal(input, doBuffer, false, charset, textFormat, xmlTag, descriptor,
 				xmlObjects, aggressiveParsing, throwsNoTagException);
 	}
@@ -152,15 +152,15 @@ public class XMLHandler {
 
 	private static void readXMLObjectsInternal(InputStream input, boolean doBuffer,
 			boolean close, Charset charset, boolean textFormat, String xmlTag, String descriptor,
-			XMLable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
-		XMLInput in = createXMLInput(input, doBuffer, charset, textFormat, aggressiveParsing, throwsNoTagException);
+			Xmlable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
+		XmlInput in = createXMLInput(input, doBuffer, charset, textFormat, aggressiveParsing, throwsNoTagException);
 		if(textFormat == true) {
 			XMLInputFactory xmlFactory = getXMLFactory();
 			XMLStreamReader reader = xmlFactory.createXMLStreamReader(input, defaultCharset.name());
-			in = new XMLInputReader(reader, aggressiveParsing, throwsNoTagException);
+			in = new XmlInputReader(reader, aggressiveParsing, throwsNoTagException);
 		}
 		else {
-			in = new XMLInputStream(new DataInputStream(input));
+			in = new XmlInputStream(new DataInputStream(input));
 		}
 
 		in.readOpeningBlock(xmlTag);
@@ -199,7 +199,7 @@ public class XMLHandler {
 	 * @throws Exception if there is an error saving the XML object
 	 */
 	public static void writeXMLObjects(File file, boolean doBuffer, Charset charset, boolean textFormat,
-			String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
+			String xmlTag, String descriptor, Xmlable[] xmlObjects) throws Exception {
 		OutputStream stream = new BufferedOutputStream(new FileOutputStream(file));
 		writeXMLObjectsInternal(stream, doBuffer, true, charset, textFormat, xmlTag, descriptor, xmlObjects);
 	}
@@ -219,20 +219,20 @@ public class XMLHandler {
 	 * @throws Exception if there is an error saving the XML object
 	 */
 	public static void writeXMLObjects(OutputStream output, boolean doBuffer, Charset charset, boolean textFormat,
-			String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
+			String xmlTag, String descriptor, Xmlable[] xmlObjects) throws Exception {
 		writeXMLObjectsInternal(output, doBuffer, false, charset, textFormat, xmlTag, descriptor, xmlObjects);
 	}
 
 
 	private static void writeXMLObjectsInternal(OutputStream output, boolean doBuffer,
 			boolean close, Charset charset, boolean textFormat,
-			String xmlTag, String descriptor, XMLable[] xmlObjects) throws Exception {
-		XMLOutput out = createXMLOutput(output, doBuffer, charset, textFormat);
-		if(out instanceof XMLOutputWriter) {
-			((XMLOutputWriter)out).writeHeader();
+			String xmlTag, String descriptor, Xmlable[] xmlObjects) throws Exception {
+		XmlOutput out = createXMLOutput(output, doBuffer, charset, textFormat);
+		if(out instanceof XmlOutputWriter) {
+			((XmlOutputWriter)out).writeHeader();
 		}
-		if(out instanceof XMLOutputStream) {
-			((XMLOutputStream)out).writeHeader();
+		if(out instanceof XmlOutputStream) {
+			((XmlOutputStream)out).writeHeader();
 		}
 
 		out.writeOpeningBlock(xmlTag, descriptor);
@@ -262,9 +262,9 @@ public class XMLHandler {
 	 * closing tag cannot be found. <code>False</code> causes the parser to silently ignore the missing tag.
 	 * @throws IOException if there is an error creating the XML input stream
 	 */
-	public static XMLInput createXMLInput(InputStream input, boolean doBuffer, Charset charset, boolean textFormat,
+	public static XmlInput createXMLInput(InputStream input, boolean doBuffer, Charset charset, boolean textFormat,
 			boolean aggressiveParsing, boolean throwsNoTagException) throws IOException {
-		XMLInput in = null;
+		XmlInput in = null;
 		if(charset == null) {
 			charset = defaultCharset;
 		}
@@ -279,13 +279,13 @@ public class XMLHandler {
 			} catch (XMLStreamException e) {
 				throw new IOException(e);
 			}
-			in = new XMLInputReader(reader, aggressiveParsing, throwsNoTagException);
+			in = new XmlInputReader(reader, aggressiveParsing, throwsNoTagException);
 		}
 		else {
 			if(doBuffer == true) {
 				input = new BufferedInputStream(input);
 			}
-			in = new XMLInputStream(new DataInputStream(input));
+			in = new XmlInputStream(new DataInputStream(input));
 		}
 		return in;
 	}
@@ -301,8 +301,8 @@ public class XMLHandler {
 	 * @return the XML output stream created from the output stream
 	 * @throws IOException if there is an error creating the XML output stream
 	 */
-	public static XMLOutput createXMLOutput(OutputStream output, boolean doBuffer, Charset charset, boolean textFormat) {
-		XMLOutput out = null;
+	public static XmlOutput createXMLOutput(OutputStream output, boolean doBuffer, Charset charset, boolean textFormat) {
+		XmlOutput out = null;
 		if(charset == null) {
 			charset = defaultCharset;
 		}
@@ -311,13 +311,13 @@ public class XMLHandler {
 			if(doBuffer == true) {
 				writer = new BufferedWriter(writer);
 			}
-			out = new XMLOutputWriter(writer, charset);
+			out = new XmlOutputWriter(writer, charset);
 		}
 		else {
 			if(doBuffer == true) {
 				output = new BufferedOutputStream(output);
 			}
-			out = new XMLOutputStream(new DataOutputStream(output));
+			out = new XmlOutputStream(new DataOutputStream(output));
 		}
 		return out;
 	}
@@ -391,7 +391,7 @@ public class XMLHandler {
 
 	/** Validate an XML string containing invalid XML characters into XML values (&amp; &apos; etc.) by replacing
 	 * invalid characters with their corresponding character codes
-	 * @param content - String to convert non-XML character to XML characters
+	 * @param content the String to convert non-XML character to XML characters
 	 * @return String with invalid XML characters replaced with XML character codes
 	 */
 	public static String validateElement(String content) {
@@ -428,7 +428,7 @@ public class XMLHandler {
 
 	/** Convert an XML string containing XML character codes (&amp; &apos; etc.) by replacing
 	 * them with the corresponding character
-	 * @param content - String to convert XML to non-XML characters (&amp; &quot; etc.)
+	 * @param content the String to convert XML to non-XML characters (&amp; &quot; etc.)
 	 * @return String with XML characters replaced with normal characters
 	 */
 	public static String convertElement(String content) {

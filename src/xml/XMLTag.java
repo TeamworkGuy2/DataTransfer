@@ -2,12 +2,11 @@ package xml;
 
 import dataTransfer.DataHeader;
 
-/** An XML header object representing the opening XML tag for a {@link XMLable}
- * object.
+/** An XML header object representing the opening XML tag for a {@link Xmlable} object.
  * @author TeamworkGuy2
  * @since 2013-8-30
  */
-public interface XMLTag extends DataHeader {
+public interface XmlTag extends DataHeader {
 
 	/**
 	 * @return this XML header tag's name

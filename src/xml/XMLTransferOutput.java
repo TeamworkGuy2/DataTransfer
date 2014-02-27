@@ -4,11 +4,17 @@ import java.io.IOException;
 
 import dataTransfer.DataTransferOutput;
 
-public class XMLTransferOutput implements DataTransferOutput {
-	private XMLOutput output;
+/** A converter for an {@link XmlOutput} stream that converts it to a {@link DataTransferOutput}
+ * stream. This is possible by ignoring the {@code id} parameter of the XmlOutput stream's write
+ * method calls.
+ * @author TeamworkGuy2
+ * @since 2013-11-1
+ */
+public class XmlTransferOutput implements DataTransferOutput {
+	private XmlOutput output;
 
 
-	public XMLTransferOutput(XMLOutput output) {
+	public XmlTransferOutput(XmlOutput output) {
 		this.output = output;
 	}
 

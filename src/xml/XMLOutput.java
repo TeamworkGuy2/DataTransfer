@@ -9,9 +9,9 @@ import java.io.IOException;
  * @author TeamworkGuy2
  * @since 2013-2-1
  */
-public interface XMLOutput extends Closeable {
+public interface XmlOutput extends Closeable {
 
-	/** Write a byte array with the specified XML tag name
+	/** Write a byte array with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param b the array of bytes to write in the XML element
 	 * @throws IOException if there is an IO error while writing to the output stream
@@ -19,16 +19,16 @@ public interface XMLOutput extends Closeable {
 	public void write(String name, byte[] b) throws IOException;
 
 
-	/** Write a byte array with the specified XML tag name
+	/** Write a byte array with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param b the array of bytes to write in the XML element
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
-	public void write(String name, byte[] b, XMLAttributes attributes) throws IOException;
+	public void write(String name, byte[] b, XmlAttributes attributes) throws IOException;
 
 
-	/** Write a byte array with the specified XML tag name
+	/** Write a byte array with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param b the byte array to write in the XML element
 	 * @param off the offset into the byte array to write to the XML element
@@ -38,7 +38,7 @@ public interface XMLOutput extends Closeable {
 	public void write(String name, byte[] b, int off, int len) throws IOException;
 
 
-	/** Write a byte array with the specified XML tag name
+	/** Write a byte array with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param b the byte array to write in the XML element
 	 * @param off the offset into the byte array to write to the XML element
@@ -46,10 +46,10 @@ public interface XMLOutput extends Closeable {
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
-	public void write(String name, byte[] b, int off, int len, XMLAttributes attributes) throws IOException;
+	public void write(String name, byte[] b, int off, int len, XmlAttributes attributes) throws IOException;
 
 
-	/** Write a boolean value with the specified XML tag name
+	/** Write a boolean value with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the boolean value to write in the XML element
 	 * @throws IOException if there is an IO error while writing to the output stream
@@ -57,16 +57,16 @@ public interface XMLOutput extends Closeable {
 	public void writeBoolean(String name, boolean v) throws IOException;
 
 
-	/** Write a boolean value with the specified XML tag name
+	/** Write a boolean value with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the boolean value to write in the XML element
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
-	public void writeBoolean(String name, boolean v, XMLAttributes attributes) throws IOException;
+	public void writeBoolean(String name, boolean v, XmlAttributes attributes) throws IOException;
 
 
-	/** Write a byte with the specified XML tag name
+	/** Write a byte with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the byte to write in the XML element
 	 * @throws IOException if there is an IO error while writing to the output stream
@@ -74,16 +74,16 @@ public interface XMLOutput extends Closeable {
 	public void writeByte(String name, byte v) throws IOException;
 
 
-	/** Write a byte with the specified XML tag name
+	/** Write a byte with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the byte to write in the XML element
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
-	public void writeByte(String name, byte v, XMLAttributes attributes) throws IOException;
+	public void writeByte(String name, byte v, XmlAttributes attributes) throws IOException;
 
 
-	/** Write a char with the specified XML tag name
+	/** Write a char with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the char (as an integer) to write in the XML element
 	 * @throws IOException if there is an IO error while writing to the output stream
@@ -91,16 +91,16 @@ public interface XMLOutput extends Closeable {
 	public void writeChar(String name, char v) throws IOException;
 
 
-	/** Write a char with the specified XML tag name
+	/** Write a char with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the char (as an integer) to write in the XML element
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
-	public void writeChar(String name, char v, XMLAttributes attributes) throws IOException;
+	public void writeChar(String name, char v, XmlAttributes attributes) throws IOException;
 
 
-	/** Write a double with the specified XML tag name
+	/** Write a double with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the double to write in the XML element
 	 * @throws IOException if there is an IO error while writing to the output stream
@@ -108,16 +108,16 @@ public interface XMLOutput extends Closeable {
 	public void writeDouble(String name, double v) throws IOException;
 
 
-	/** Write a double with the specified XML tag name
+	/** Write a double with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the double to write in the XML element
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
-	public void writeDouble(String name, double v, XMLAttributes attributes) throws IOException;
+	public void writeDouble(String name, double v, XmlAttributes attributes) throws IOException;
 
 
-	/** Write a float with the specified XML tag name
+	/** Write a float with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the float to write in the XML element
 	 * @throws IOException if there is an IO error while writing to the output stream
@@ -125,16 +125,16 @@ public interface XMLOutput extends Closeable {
 	public void writeFloat(String name, float v) throws IOException;
 
 
-	/** Write a float with the specified XML tag name
+	/** Write a float with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the float to write in the XML element
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
-	public void writeFloat(String name, float v, XMLAttributes attributes) throws IOException;
+	public void writeFloat(String name, float v, XmlAttributes attributes) throws IOException;
 
 
-	/** Write an integer with the specified XML tag name
+	/** Write an integer with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the integer to write in the XML element
 	 * @throws IOException if there is an IO error while writing to the output stream
@@ -142,16 +142,16 @@ public interface XMLOutput extends Closeable {
 	public void writeInt(String name, int v) throws IOException;
 
 
-	/** Write an integer with the specified XML tag name
+	/** Write an integer with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the integer to write in the XML element
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
-	public void writeInt(String name, int v, XMLAttributes attributes) throws IOException;
+	public void writeInt(String name, int v, XmlAttributes attributes) throws IOException;
 
 
-	/** Write a long with the specified XML tag name
+	/** Write a long with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the long to write in the XML element
 	 * @throws IOException if there is an IO error while writing to the output stream
@@ -159,16 +159,16 @@ public interface XMLOutput extends Closeable {
 	public void writeLong(String name, long v) throws IOException;
 
 
-	/** Write a long with the specified XML tag name
+	/** Write a long with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the long to write in the XML element
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
-	public void writeLong(String name, long v, XMLAttributes attributes) throws IOException;
+	public void writeLong(String name, long v, XmlAttributes attributes) throws IOException;
 
 
-	/** Write a short with the specified XML tag name
+	/** Write a short with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the short to write in the XML element
 	 * @throws IOException if there is an IO error while writing to the output stream
@@ -176,16 +176,16 @@ public interface XMLOutput extends Closeable {
 	public void writeShort(String name, short v) throws IOException;
 
 
-	/** Write a short with the specified XML tag name
+	/** Write a short with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param v the short to write in the XML element
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
-	public void writeShort(String name, short v, XMLAttributes attributes) throws IOException;
+	public void writeShort(String name, short v, XmlAttributes attributes) throws IOException;
 
 
-	/** Write a String with the specified XML tag name
+	/** Write a String with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param s the String to write in the XML element
 	 * @throws IOException if there is an IO error while writing to the output stream
@@ -193,31 +193,31 @@ public interface XMLOutput extends Closeable {
 	public void writeUTF(String name, String s) throws IOException;
 
 
-	/** Write a String with the specified XML tag name
+	/** Write a String with the specified XML tag name.
 	 * @param name the name of the XML tag to write
 	 * @param s the String to write in the XML element
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error while writing to the output stream
 	 */
-	public void writeUTF(String name, String s, XMLAttributes attributes) throws IOException;
+	public void writeUTF(String name, String s, XmlAttributes attributes) throws IOException;
 
 
-	/** Write an opening XML tag and add a corresponding tag to this writer's internal list of open XML tags
+	/** Write an opening XML tag with the specified name.
 	 * @param name the name of opening XML header to write
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
 	public void writeOpeningBlock(String name) throws IOException;
 
 
-	/** Write an opening XML tag and add a corresponding tag to this writer's internal list of open XML tags
+	/** Write an opening XML tag and with the specified name.
 	 * @param name the name of opening XML header to write
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
-	public void writeOpeningBlock(String name, XMLAttributes attributes) throws IOException;
+	public void writeOpeningBlock(String name, XmlAttributes attributes) throws IOException;
 
 
-	/** Write an opening XML tag and add a corresponding tag to this writer's internal list of open XML tags
+	/** Write an opening XML tag and with the specified name and descriptor.
 	 * @param name the name of opening XML header to write
 	 * @param descriptor an optional descriptor to associated with the opening XML header, or null for a generic tag
 	 * @throws IOException if there is an IO error writing to the output stream
@@ -225,28 +225,29 @@ public interface XMLOutput extends Closeable {
 	public void writeOpeningBlock(String name, String descriptor) throws IOException;
 
 
-	/** Write an opening XML tag and add a corresponding tag to this writer's internal list of open XML tags
+	/** Write an opening XML tag with the specified name and descriptor.
 	 * @param name the name of opening XML header to write
 	 * @param descriptor an optional descriptor to associated with the opening XML header, or null for a generic tag
 	 * @param attributes the group of attributes to write with this XML tag
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
-	public void writeOpeningBlock(String name, String descriptor, XMLAttributes attributes) throws IOException;
+	public void writeOpeningBlock(String name, String descriptor, XmlAttributes attributes) throws IOException;
 
 
-	/** Write a closing XML tag for the last written opening XML tag
+	/** Write a closing XML tag.
+	 * This tag matches the last written opening XML tag
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
 	public void writeClosingBlock() throws IOException;
 
 
-	/** Get the number of open XML tags waiting for their corresponding closing tags to be written
+	/** Get the number of open XML tags waiting for their corresponding closing tags to be written.
 	 * @return the number of open tags waiting to be written
 	 */
 	public int getBlocksRemaining();
 
 
-	/** Get the number of opening and closing XML tags written by this writer
+	/** Get the number of opening and closing XML tags written by this writer.
 	 * @return the number of opening and closing XML tags written by this writer
 	 */
 	public int getBlocksWritten();

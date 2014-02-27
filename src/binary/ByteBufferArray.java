@@ -3,7 +3,9 @@ package binary;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,10 +14,10 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-/** A buffer for storing, writing, and manipulating data as a byte array
- * This class was created out of the need for an object that combines the
- * resizeability of a {@link ByteArrayOutputStream} and the indexed
- * positioning of a {@link ByteBuffer} with the utility read/write methods
+/** A buffer for storing, writing, and manipulating data as a byte array.
+ * This class was created to combine the resize-ability of a
+ * {@link ByteArrayOutputStream} and the indexed positioning
+ * of a {@link ByteBuffer} with the utility read/write methods
  * of {@link DataOutput}.<br/>
  * Basically it is a random access data input and output stream based
  * on a byte array rather than a file or socket.
@@ -25,30 +27,25 @@ import java.util.Arrays;
  * @since 2013-8-3
  */
 public class ByteBufferArray implements DataOutput, DataInput, Closeable {
-	/** The buffer to store data in
-	 */
+	/** The buffer to store data in */
 	private byte buffer[];
 	/** The current absolute max data index (offset is not added to this value)
 	 * maxPos-1 is the highest absolute index containing data
 	 * Size can be calculated by subtracting offset from maxPos
 	 */
 	private int maxPos;
-	/** The current index to write data to
-	 */
+	/** The current index to write data to */
 	private int pos;
-	/** Number of bytes written to this buffer
-	 */
-	//private int writeCount;
 
 
-	/** Constructs a byte buffer with an initial size of 64 bytes
+	/** Constructs a byte buffer with an initial size of 64 bytes.
 	 */
 	public ByteBufferArray() {
 		this(64);
 	}
 
 
-	/** Constructs a byte buffer with the specified byte size
+	/** Constructs a byte buffer with the specified byte size.
 	 * @param size the initial byte size of the new buffer
 	 */
 	public ByteBufferArray(int size) {
@@ -59,7 +56,7 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** Write the lowest byte of data from the input integer to this buffer array
+	/** Write the lowest byte of data from the input integer to this buffer array.
 	 * @param b an integer, write the lowest byte of this integer
 	 */
 	@Override
@@ -71,6 +68,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Write an array of bytes to this buffer.
+	 * @param bytes the array of bytes to add to this buffer
+	 */
 	@Override
 	public void write(byte[] bytes) {
 		// Write a byte array
@@ -78,6 +78,11 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Write a portion of an array of bytes to this buffer.
+	 * @param bytes the array of bytes of which part is to be added to this buffer
+	 * @param offset the offset into the array to start reading bytes
+	 * @param length the number of bytes to add to this buffer from the array
+	 */
 	@Override
 	public void write(byte[] bytes, int offset, int length) {
 		if((offset < 0 || length < 0) || (offset+length > bytes.length || offset+length < 0)) {
@@ -93,6 +98,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Write the specified boolean to this buffer.
+	 * @param value the boolean to write to this buffer as a byte
+	 */
 	@Override
 	public final void writeBoolean(boolean value) {
 		// Write a boolean, 1=true, 0=false (big endian format)
@@ -102,6 +110,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Write the specified byte to this buffer.
+	 * @param value the byte to write to this buffer
+	 */
 	@Override
 	public final void writeByte(int value) {
 		// Write a byte
@@ -111,6 +122,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Write the specified short value to this buffer.
+	 * @param value the short to write to this buffer
+	 */
 	@Override
 	public final void writeShort(int value) {
 		// Write a short, assumed 2 bytes (big endian format)
@@ -121,6 +135,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Write the specified character value to this buffer.
+	 * @param value the char to write to this buffer
+	 */
 	@Override
 	public final void writeChar(int value) {
 		// Write a char, assumed 2 bytes (big endian format)
@@ -131,6 +148,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Write the specified int to this buffer.
+	 * @param value the int to write to this buffer
+	 */
 	@Override
 	public final void writeInt(int value) {
 		// Write an int, assumed 4 bytes (big endian format)
@@ -143,6 +163,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Write the specified long value to this buffer.
+	 * @param value the long to write to this buffer
+	 */
 	@Override
 	public final void writeLong(long value) {
 		// Write a long, assumed 8 bytes (big endian format)
@@ -159,18 +182,28 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Write the specified float value to this buffer.
+	 * @param value the float to write to this buffer
+	 */
 	@Override
 	public final void writeFloat(float value) {
 		writeInt(Float.floatToIntBits(value));
 	}
 
 
+	/** Write the specified double value to this buffer.
+	 * @param value the double to write to this buffer
+	 */
 	@Override
 	public final void writeDouble(double value) {
 		writeLong(Double.doubleToLongBits(value));
 	}
 
 
+	/** Write the lowest byte of each character in the specified string to this buffer.
+	 * @param string the string to write to this buffer. Only the lowest byte of each
+	 * character in the string is written.
+	 */
 	@Override
 	public final void writeBytes(String string) {
 		int length = string.length();
@@ -183,6 +216,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Write the specified string to this buffer.
+	 * @param string the string to write to this buffer as a list of characters
+	 */
 	@Override
 	public final void writeChars(String string) {
 		int length = string.length();
@@ -199,6 +235,10 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Write the specified string to this buffer in Java's UTF string format.
+	 * @param string the string to write to this buffer
+	 * @see DataOutputStream#writeUTF(String)
+	 */
 	@Override
 	public final void writeUTF(String string) throws IOException {
 		int stringLength = string.length();
@@ -270,7 +310,7 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 
 
 	/** Read a single byte and return its unsigned value in the range
-	 * <code>0</code> to <code>255</code>
+	 * {@code 0} to {@code 255}.
 	 * @return the byte value read or -1 if the end of the stream has been reached
 	 */
 	public int read() {
@@ -278,10 +318,10 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** Copy as many bytes as possible from this buffer starting at the
-	 * buffer's current position into the specified destination array
-	 * @param dst the destination array to write the bytes to
-	 * starting at the first byte up to the length of the array.
+	/** Copy as many bytes as possible from this buffer into the specified array.
+	 * Bytes are read starting at this buffer's current position.
+	 * @param dst the destination array to write the bytes to starting at the
+	 * array's first index up to the length of the array.
 	 * @return the number of byte successfully read and transfer into the array
 	 */
 	public int read(byte[] dst) {
@@ -289,13 +329,15 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** Copy as many bytes as possible from this buffer starting at the
-	 * buffer's current position into the specified destination array
+	/** Copy as many bytes as possible up to {@code length} bytes from this buffer into the specified array.
+	 * Bytes are read starting at the buffers current position and are copied into
+	 * the array starting at the specified array offset. 
 	 * @param dst the destination array to write the bytes to
-	 * @param offset the destination array offset at which to begin writing data
-	 * @param length the number of bytes to copy from this buffer into the
-	 * destination array
-	 * @return the number of bytes read
+	 * @param offset the offset into the destination array at which to begin writing data
+	 * @param length the number of bytes to copy from this buffer into the destination array
+	 * @return the number of bytes successfully read
+	 * @throws IndexOutOfBoundsException if the {@code offset+length > dst.length} or if
+	 * either {@code offset < 0} or {@code length < 0}.
 	 */
 	public int read(byte[] dst, int offset, int length) {
 		// Check that the offset and length and destination array are all within correct ranges
@@ -318,10 +360,13 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** See the {@link DataInput#readFully(byte[]) DataInput.readFully()}
+	/** Copy as many bytes as possible from this buffer into the specified array.
+	 * See the {@link DataInput#readFully(byte[]) DataInput.readFully()}
 	 * contract documentation. This method roughly follows that documentation
 	 * except a {@link BufferUnderflowException} is thrown instead of
 	 * an {@link EOFException}
+	 * @param b the destination array to copy bytes into
+	 * @see #read(byte[], int, int)
 	 */
 	@Override
 	public void readFully(byte[] b) {
@@ -329,17 +374,25 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** See the {@link DataInput#readFully(byte[], int, int) DataInput.readFully()}
+	/** Copy as many bytes as possible up to {@code length} bytes from this buffer into the specified array.
+	 * See the {@link DataInput#readFully(byte[], int, int) DataInput.readFully()}
 	 * contract documentation. This method roughly follows that documentation
 	 * except a {@link BufferUnderflowException} is thrown instead of
 	 * an {@link EOFException}
+	 * @param b the destination array to copy bytes into
+	 * @param offset the offset into the destination array at which to start copying bytes in
+	 * @param length the number of bytes to copy into the destination array
+	 * @see #read(byte[], int, int)
 	 */
 	@Override
-	public void readFully(byte[] b, int off, int len) {
-		read(b, off, len);
+	public void readFully(byte[] b, int offset, int length) {
+		read(b, offset, length);
 	}
 
 
+	/** Skip over the specified number of bytes in this buffer without reading them.
+	 * @param n the number of bytes to skip over in this buffer
+	 */
 	@Override
 	public int skipBytes(int n) {
 		checkAndRead(n); // Adds n to this buffer's position!
@@ -347,6 +400,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Read a boolean from this buffer.
+	 * @return the boolean read from this buffer
+	 */
 	@Override
 	public boolean readBoolean() {
 		int validPos = checkAndRead(1); // Adds 1 to this buffer's position!
@@ -355,6 +411,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Read a byte from this buffer.
+	 * @return the byte read from this buffer
+	 */
 	@Override
 	public byte readByte() {
 		int validPos = checkAndRead(1); // Adds 1 to this buffer's position!
@@ -363,6 +422,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Read an unsigned byte value from this buffer.
+	 * @return the byte read from this buffer as an int in the range {@code 0} to {@code 255}
+	 */
 	@Override
 	public int readUnsignedByte() {
 		int validPos = checkAndRead(1); // Adds 1 to this buffer's position!
@@ -371,6 +433,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Read a short value from this buffer.
+	 * @return the short value read from this buffer
+	 */
 	@Override
 	public short readShort() {
 		int validPos = checkAndRead(2); // Adds 2 to this buffer's position!
@@ -379,6 +444,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Read an unsigned short value from this buffer.
+	 * @return the unsigned short value read from this value as an int in the range {@code 0} to {@code 65536}
+	 */
 	@Override
 	public int readUnsignedShort() {
 		int validPos = checkAndRead(2); // Adds 2 to this buffer's position!
@@ -387,6 +455,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Read a character value from this buffer.
+	 * @return the char value read from this buffer
+	 */
 	@Override
 	public char readChar() {
 		int validPos = checkAndRead(2); // Adds 2 to this buffer's position!
@@ -395,6 +466,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Read an int from this buffer.
+	 * @return the int read from this buffer
+	 */
 	@Override
 	public int readInt() {
 		int validPos = checkAndRead(4); // Adds 4 to this buffer's position!
@@ -404,6 +478,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Read a long value from this buffer.
+	 * @return the long read from this buffer
+	 */
 	@Override
 	public long readLong() {
 		int validPos = checkAndRead(8); // Adds 8 to this buffer's position!
@@ -419,6 +496,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Read a float from this buffer.
+	 * @return the float read from this buffer
+	 */
 	@Override
 	public float readFloat() {
 		// readInt() takes care of checking for valid buffer position, etc
@@ -427,6 +507,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Read a double value from this buffer.
+	 * @return the double value read from this buffer
+	 */
 	@Override
 	public double readDouble() {
 		// readLong() takes care of checking for valid buffer position, etc
@@ -435,6 +518,10 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Read a Java formatted UTF string from this buffer.
+	 * @return the UTF string read from this buffer
+	 * @see DataInputStream#readUTF()
+	 */
 	@Override
 	public String readUTF() throws IOException {
 		int utfLength = readUnsignedShort(); // Adds 2 to this buffer's position!
@@ -497,6 +584,7 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 
 	/** This operation is depreciated and not implemented by this buffer.
 	 * Calling this method throws an {@link UnsupportedOperationException}
+	 * @throws UnsupportedOperationException because reading a line is undefined for a byte buffer without text data
 	 */
 	@Deprecated
 	@Override
@@ -505,6 +593,8 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
+	/** Invalidate this buffer's state and data
+	 */
 	@Override
 	public void close() {
 		buffer = null;
@@ -513,8 +603,7 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** Clear this buffer completely and set the buffer size to zero.
-	 * The number of bytes written is not reset
+	/** Clear this buffer completely and set the buffer's size and position to zero.
 	 */
 	public void clear() {
 		pos = 0;
@@ -522,27 +611,27 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** Write this buffer to the specified output stream
+	/** Write this buffer to the specified output stream.
 	 * @param out the output stream to write this buffer to starting from the
 	 * current position, {@link #size()} bytes are written to the output stream
-	 * @throws IOException
+	 * @throws IOException if there is an error writing to the output stream
 	 */
 	public void writeTo(OutputStream out) throws IOException {
 		out.write(buffer, pos, maxPos-pos);
 	}
 
 
-	/** Write this buffer to the specified data output stream
+	/** Write this buffer to the specified data output stream.
 	 * @param out the data output to write this buffer to starting from the
 	 * current position, {@link #size()} bytes are written to the data output
-	 * @throws IOException
+	 * @throws IOException if there is an error writing to the data output stream
 	 */
 	public void writeTo(DataOutput out) throws IOException {
 		out.write(buffer, pos, maxPos-pos);
 	}
 
 
-	/** Write this buffer to the specified byte buffer
+	/** Write this buffer to the specified byte buffer.
 	 * @param bb the byte buffer to write this buffer to starting from the
 	 * current position, {@link #size()} bytes are written to the byte buffer
 	 */
@@ -551,8 +640,9 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** Return this buffer's data from the current position to the buffer's
-	 * limit. The returned array is {@link #size()} - {@link #position()} bytes long.
+	/** Return this buffer's data starting at the buffer's current position.
+	 * The data in this buffer from the current position to the buffer's limit is copied and returned.
+	 * The returned array is {@link #size()} - {@link #position()} bytes long.
 	 * @return a byte array {@link #size()} - {@link #position()} bytes long
 	 * filled with this buffer's data
 	 */
@@ -561,7 +651,8 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** This buffer's entire size, not counting the buffer's current position
+	/** This buffer's size.
+	 * This does not account for the buffer's current position
 	 * @return this buffer's entire size
 	 */
 	public int size() {
@@ -569,7 +660,7 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** The remaining size of this buffer based on the buffer's current position
+	/** The remaining size of this buffer based on the buffer's current position.
 	 * @return this buffer's remaining size, equivalent to <code>{@link #size()} - {@link #position()}</code>
 	 */
 	public int remaining() {
@@ -577,19 +668,22 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** Get the buffer's current position
-	 * @return the current byte index position of the buffer in its internal byte array
+	/** Return the buffer's current position.
+	 * @return the current byte index position of this buffer
+	 * @see #size()
+	 * @see #remaining()
 	 */
 	public int position() {
 		return pos;
 	}
 
 
-	/** Set the buffer's current position, the buffer's size is not reset to zero.
+	/** Set the buffer's current position.
+	 * The buffer's size is not reset to zero.
 	 * To reset the buffer's size to zero call {@link #clear()}
-	 * throws an exception if the index is outside of the buffer's size
 	 * @param index the internal byte array index to set this buffer's current byte index position to.
 	 * This value must be greater than or equal to 0 and less than {@link #size()}.
+	 * @throws IndexOutOfBoundsException if the specified index is greater than the buffer's size or less than zero.
 	 */
 	public void position(int index) {
 		if(index < 0 || index > maxPos) {
@@ -599,17 +693,15 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** Check that the specified number of bytes exist in this buffer
-	 * and can be read.  Increment this buffer's position and return
-	 * the old position. This is normally called at the beginning
-	 * of a method and the method uses the returned old position
-	 * for its duration.
-	 * If the number of bytes to read is less than 0 or exceeds the buffer's
-	 * size, throw an exception
+	/** Check that the specified number of bytes exist in this buffer and can be read.
+	 * Increment this buffer's position and return the old position.
+	 * This is normally called at the beginning of a method and the method
+	 * uses the returned old position for its duration.
 	 * @param byteCount the number of bytes to ensure currently exist in the buffer
-	 * @return the old absolute buffer position/index. Indexes from this returned
-	 * value up to (this returned value + byteCount - 1) are ensured to be
+	 * @return The buffer's old position. Indexes from this returned
+	 * value up to {@code (this returned value + byteCount - 1)} are ensured to be
 	 * valid indexes
+	 * @throws IndexOutOfBoundsException If the number of bytes to read is less than 0 or exceeds the buffer's size
 	 */
 	private final int checkAndRead(int byteCount) {
 		if(pos+byteCount > maxPos || byteCount < 0) { throw new IndexOutOfBoundsException(); }
@@ -618,9 +710,11 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 		return oldPos;
 	}
 
-	/** Ensure that the specified number of bytes can be added to this buffer
-	 * without the buffer overflowing and without an integer overflow
+	/** Ensure that the specified number of bytes can be added to this buffer.
+	 * Ensure that {@code byteCount} number of bytes can be added without the buffer
+	 * overflowing and without an integer overflow.
 	 * @param byteCount check if this many bytes can safely be added to the buffer
+	 * @throws IllegalStateException if the new position causes the buffer's size integer to overflow
 	 */
 	private final void ensureNewDataFits(int byteCount) {
 		int bufferLength = buffer.length;
@@ -635,8 +729,7 @@ public class ByteBufferArray implements DataOutput, DataInput, Closeable {
 	}
 
 
-	/** Adjust this buffer's position, max position, and bytes written count
-	 * after writing new data to this buffer.
+	/** Adjust this buffer's position and max position after writing new data to this buffer.
 	 * This call should be made after writing data to the buffer and after
 	 * calling {@link #ensureNewDataFits(int)}
 	 * @param byteCount the number of bytes that were added to this buffer

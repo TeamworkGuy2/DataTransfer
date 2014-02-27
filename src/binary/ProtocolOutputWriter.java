@@ -3,8 +3,8 @@ package binary;
 import java.io.IOException;
 import java.io.DataOutput;
 
-/** {@link ProtocolOutput} implementation wrapper that converting a {@link DataOutput} stream into a
- * {@link ProtocolOutput} stream.
+/** {@link ProtocolOutput} implementation wrapper that converting a {@link DataOutput} stream
+ * into a {@link ProtocolOutput} stream.
  * AN {@link ProtocolTransferable} object could be written to a {@link DataOutput} stream using this example code.
  * <p><blockquote><pre class="brush: java">
  * public void writeExternal(ObjectOutput out) throws IOException {
@@ -101,9 +101,11 @@ import java.io.DataOutput;
  * 	attribute block (if the attribute bit is set) - contains variable number of attributes
  * 	data block (if the data bit is set) - contains tag data
  * </pre>
- * Data types can be found in {@link ProtocolHandler}, such as {@link ProtocolHandler#BYTE_TYPE}, and {@link ProtocolHandler#ARRAY_TYPE} for arrays.
+ * Data types can be found in {@link ProtocolHandler}, such as {@link ProtocolHandler#BYTE_TYPE},
+ * and {@link ProtocolHandler#ARRAY_TYPE} for arrays.
  * @author TeamworkGuy2
  * @since 2013-7-18
+ * @see ProtocolOutput
  */
 public class ProtocolOutputWriter implements ProtocolOutput {
 	// three integers per stack data structure

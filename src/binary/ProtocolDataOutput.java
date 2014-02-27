@@ -4,6 +4,14 @@ import java.io.IOException;
 
 import dataTransfer.DataTransferOutput;
 
+/** A wrapper that converts a {@link ProtocolOutput} stream to a {@link DataTransferOutput} stream.
+ * This can be done relatively safely without data loss by ignoring the {@code name} parameter
+ * from the DataTransferOutput stream's write methods when writing to the underlying ProtocolOutput stream.<br/>
+ * For this data to be written without loss, the {@code id} parameters passed in by write calls must be unique.
+ * @author TeamworkGuy2
+ * @since 2013-9-22
+ * @see DataTransferOutput
+ */
 public class ProtocolDataOutput implements DataTransferOutput {
 	private ProtocolOutput output;
 

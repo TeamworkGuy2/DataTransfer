@@ -8,20 +8,21 @@ import javax.xml.stream.XMLStreamException;
  * @author TeamworkGuy2
  * @since 2013-2-1
  */
-public interface XMLable {
+public interface Xmlable {
 
-	/** Initialize this object with XML data read from the specified {@link XMLInput} stream
-	 * @param inputStream - the XML data input stream
+	/** Set this object's data with XML data read from the specified {@link XmlInput} stream
+	 * @param inputStream the XML data input stream
 	 * @throws IOException if there is an error reading data from the input stream
 	 * @throws XMLStreamException if there is an error reading XML data from the input stream
 	 */
-	public void readXML(XMLInput inputStream) throws IOException, XMLStreamException;
+	public void readXML(XmlInput inputStream) throws IOException, XMLStreamException;
 
-	/** Write this XML object to the specified {@link XMLOutput} stream
-	 * @param outputStream - the XML data output stream
+
+	/** Write this XML object's data to the specified {@link XmlOutput} stream
+	 * @param outputStream the XML data output stream
 	 * @throws IOException if there is an error writing data to the output stream
 	 * @throws XMLStreamException if there is an error writing XML data to the output stream
 	 */
-	public void writeXML(XMLOutput outputStream) throws IOException, XMLStreamException;
+	public void writeXML(XmlOutput outputStream) throws IOException, XMLStreamException;
 
 }

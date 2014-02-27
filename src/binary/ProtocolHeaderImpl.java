@@ -2,20 +2,21 @@ package binary;
 
 import dataTransfer.DataHeader;
 
-/** A protocol header implementation that stores the integer ID of a protocol
- * header. 
+/** A protocol header implementation that stores the integer ID of a protocol header. 
  * @author TeamworkGuy2
  * @since 2013-8-30
+ * @see ProtocolHeader
  */
 public class ProtocolHeaderImpl implements ProtocolHeader {
 	private int tagId;
 	private String descriptor;
 	private boolean openingHeader;
 
+
 	/** Create a protocol header with the specified ID.
 	 * @param tagId a protocol header ID between [0, Integer#MAX_VALUE]
 	 * that represents the identifier of a protocol data block.
-	 * @param descriptor an optional descriptor of the element, null if it does not have one
+	 * @param descriptor an optional descriptor of the element, null if the element does not have one
 	 * @param openingHeader true if this header represents an opening data block,
 	 * false if it represents a closing data block.
 	 */
@@ -71,7 +72,7 @@ public class ProtocolHeaderImpl implements ProtocolHeader {
 
 	@Override
 	public int hashCode() {
-		return 0 ^ tagId;
+		return tagId;
 	}
 
 }

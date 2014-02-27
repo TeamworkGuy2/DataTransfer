@@ -14,14 +14,15 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 
-import xml.XMLHandler;
-import xml.XMLOutput;
-import xml.XMLTransferInput;
-import xml.XMLTransferOutput;
-import dataTransfer.DataTransferInput;
-import dataTransfer.DataTransferOutput;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 
-public class MainIO {
+import xml.XmlHandler;
+import xml.XmlInputSimple;
+
+public class MainIo {
 
 
 	/** Read an Externalizable Java object from a file
@@ -62,17 +63,65 @@ public class MainIO {
 	}
 
 
-	public static void main(String[] args) throws IOException {
+	public static void printPlainXmlEvents(File file, Charset charset) throws IOException, XMLStreamException {
+		XMLInputFactory xmlFactory = XMLInputFactory.newFactory();
+		FileInputStream stream = new FileInputStream(file);
+		InputStream input = new BufferedInputStream(stream);
+		XMLStreamReader reader = xmlFactory.createXMLStreamReader(input, charset.name());
+
+		int event = reader.getEventType();
+		while(event != XMLStreamConstants.END_DOCUMENT) {
+			event = reader.next();
+			System.out.print(XmlHandler.toString(event));
+			if(event == XMLStreamConstants.CHARACTERS) {
+				System.out.print(" [" + reader.getText() + "]");
+			}
+			else if(event == XMLStreamConstants.START_ELEMENT || event == XMLStreamConstants.END_ELEMENT) {
+				System.out.print(" " + reader.getLocalName());
+			}
+			System.out.println();
+		}
+	}
+
+
+	public static void printSimpleXmlReader(File file, Charset charset) throws XMLStreamException, FileNotFoundException {
+		XMLInputFactory xmlFactory = XMLInputFactory.newFactory();
+		FileInputStream stream = new FileInputStream(file);
+		InputStream input = new BufferedInputStream(stream);
+		XMLStreamReader reader = xmlFactory.createXMLStreamReader(input, charset.name());
+		XmlInputSimple simpleXml = new XmlInputSimple(reader);
+
+		boolean found = false;
+		String tagName = null;
+		while(!simpleXml.isEmpty()) {
+			String openingName = simpleXml.readTag();
+			found = simpleXml.finishElement(openingName);
+			tagName = simpleXml.getLastTagName();
+			System.out.println((found ? "element " : (simpleXml.isLastTagOpening() ? "start " : "end ")) + tagName + ": " + (found ? simpleXml.getLastElementContents() : ""));
+		}
+	}
+
+
+	public static void main(String[] args) throws IOException, XMLStreamException {
+		//com.sun.org.apache.xerces.internal.impl.XMLStreamReaderImpl;
+		Charset charset = Charset.forName("UTF-8");
+
+		File file = new File("xml_test.xml");
+		printPlainXmlEvents(file, charset);
+
+		System.out.println("====");
+		printSimpleXmlReader(file, charset);
+
+		/*
 		// The object to write
 		Widget w = new Widget("Alpha", 42, new String[] {"A", "02", "C", "04", "E", "06", "G"});
 
 		File dataFile = new File("widget.dat");
-		Charset charset = Charset.forName("UTF-8");
 		// Create a file output stream for the XML output
 		OutputStream outStream = new FileOutputStream(dataFile);
 		// Create an XML output writer and convert it to data output writer
-		XMLOutput outXml = XMLHandler.createXMLOutput(outStream, true, charset, true);
-		DataTransferOutput out = new XMLTransferOutput(outXml);
+		XmlOutput outXml = XmlHandler.createXMLOutput(outStream, true, charset, true);
+		DataTransferOutput out = new XmlTransferOutput(outXml);
 
 		// Write the object
 		w.writeData(out);
@@ -90,7 +139,7 @@ public class MainIO {
 		// Create the file input reader for the XML input
 		InputStream inStream = new FileInputStream(dataFile);
 		// Create the XML input reader and convert it to a data input reader
-		DataTransferInput in = new XMLTransferInput(XMLHandler.createXMLInput(inStream, true, charset, true, true, true));
+		DataTransferInput in = new XmlTransferInput(XmlHandler.createXMLInput(inStream, true, charset, true, true, true));
 
 		// Read the object
 		copy.readData(in);
@@ -102,6 +151,7 @@ public class MainIO {
 
 		System.out.print("Copy parsed:\t ");
 		System.out.println(copy);
+		*/
 	}
 
 }

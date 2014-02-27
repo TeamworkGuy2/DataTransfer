@@ -24,6 +24,10 @@ public interface ProtocolHeader extends DataHeader {
 	public int getHeaderId();
 
 
+	/**
+	 * @return this protocol block header's description text if there was any associated
+	 * with this header, null otherwise.
+	 */
 	@Override
 	public String getDescriptor();
 

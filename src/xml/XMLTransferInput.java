@@ -5,11 +5,17 @@ import java.io.IOException;
 import dataTransfer.DataHeader;
 import dataTransfer.DataTransferInput;
 
-public class XMLTransferInput implements DataTransferInput {
-	private XMLInput input;
+/** A converter for an {@link XmlInput} stream that converts it to a {@link DataTransferInput}
+ * stream. This is possible by ignoring the {@code id} parameter of the XmlInput stream's read
+ * method calls.
+ * @author TeamworkGuy2
+ * @since 2013-11-1
+ */
+public class XmlTransferInput implements DataTransferInput {
+	private XmlInput input;
 
 
-	public XMLTransferInput(XMLInput input) {
+	public XmlTransferInput(XmlInput input) {
 		this.input = input;
 	}
 
@@ -81,13 +87,13 @@ public class XMLTransferInput implements DataTransferInput {
 
 
 	@Override
-	public XMLTag peekNextBlock() throws IOException {
+	public XmlTag peekNextBlock() throws IOException {
 		return input.peekNextBlock();
 	}
 
 
 	@Override
-	public XMLTag readNextBlock() throws IOException {
+	public XmlTag readNextBlock() throws IOException {
 		return input.readNextBlock();
 	}
 
@@ -99,7 +105,7 @@ public class XMLTransferInput implements DataTransferInput {
 
 
 	@Override
-	public XMLTag getCurrentBlockHeader() {
+	public XmlTag getCurrentBlockHeader() {
 		return input.getCurrentBlockHeader();
 	}
 

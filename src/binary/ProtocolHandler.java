@@ -20,10 +20,10 @@ import java.nio.charset.Charset;
  * <br/>
  * And the important array type:<br/>
  * ARRAY_TYPE = 0x10
- * @see ProtocolOutput
- * @see ProtocolInput
  * @author TeamworkGuy2
  * @since 2013-7-18
+ * @see ProtocolOutput
+ * @see ProtocolInput
  */
 public class ProtocolHandler {
 	/** Used to identify the mask for all data type values including the <code>ARRAY_TYPE</code> */
@@ -60,6 +60,10 @@ public class ProtocolHandler {
 	static final Charset defaultCharset = Charset.forName("US-ASCII");
 
 
+	/** Get the default charset used by this package's protocol handlers.
+	 * @return the default charset for protocol input/output streams to use
+	 * @throws IOException if no supported charset can be found
+	 */
 	protected static Charset getCharset() throws IOException {
 		Charset charset = null;
 		for(int i = 0; i < charsetNames.length; i++) {
@@ -73,6 +77,7 @@ public class ProtocolHandler {
 		}
 		return charset;
 	}
+
 
 	/** Read an array of protocol objects from the specified protocol input
 	 * stream. Reads the specified tag ID only if the ID is not -1.

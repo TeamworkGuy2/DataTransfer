@@ -10,15 +10,15 @@ import javax.xml.stream.XMLStreamException;
 
 import dataTransfer.DataHeader;
 
-import xml.XMLAttributes;
-import xml.XMLHandler;
-import xml.XMLInput;
-import xml.XMLTag;
-import xml.XMLTagImpl;
+import xml.XmlAttributes;
+import xml.XmlHandler;
+import xml.XmlInput;
+import xml.XmlTag;
+import xml.XmlTagImpl;
 
-/** {@link XMLInput} implementation wrapper that converts a {@link DataInput} stream into an {@link XMLInput}
+/** {@link XmlInput} implementation wrapper that converts a {@link DataInput} stream into an {@link XmlInput}
  * stream.
- * For example a {@link DataInput} stream could be converted to an {@link xml.XMLable XMLable} object via this code.
+ * For example a {@link DataInput} stream could be converted to an {@link xml.Xmlable Xmlable} object via this code.
  *
  * <br/>
  * Current binary format:
@@ -65,7 +65,7 @@ import xml.XMLTagImpl;
  * future format (not yet implemented)...
  * <pre>
  * Nested block type
- * 	block ID - (2 bytes) ID of block type, see {@link XMLHandler} for some default block types, including, data, name, etc.
+ * 	block ID - (2 bytes) ID of block type, see {@link XmlHandler} for some default block types, including, data, name, etc.
  * 	format tag - (1 byte)
  * 		[7-6th] block count storage bits - define number of bytes used to store the block count:
  * 		0 = no blocks, 1 = 1 byte, 2 = 2 bytes, 3 = 4 bytes.
@@ -75,12 +75,12 @@ import xml.XMLTagImpl;
  * 	N-blocks - (variable bytes) where N = block count
  * 
  * Name block type
- * 	block ID - (2 bytes) ID of block type, see {@link XMLHandler} for some default block types, including, data, name, etc.
+ * 	block ID - (2 bytes) ID of block type, see {@link XmlHandler} for some default block types, including, data, name, etc.
  * 	tag name - (Java UTF String)
  * 		The tag's name as a Java UTF-16 char type string
  * 
  * Attribute block type
- * 	block ID - (2 bytes) ID of block type, see {@link XMLHandler} for some default block types, including, data, name, etc.
+ * 	block ID - (2 bytes) ID of block type, see {@link XmlHandler} for some default block types, including, data, name, etc.
  * 	format tag - (1 byte)
  * 		[7-6th] attribute count storage bits - define number of bytes used to store the attribute count:
  * 		0 = no attributes, 1 = 1 byte, 2 = 2 bytes, 3 = 4 bytes.
@@ -93,7 +93,7 @@ import xml.XMLTagImpl;
  * 		[8th] name bit - 1 means the attribute contains a name string directly before the data
  * 		[7-6th] array storage bits - define number of bytes storing the attribute's array length, 0 not allowed since the
  * 		attribute's storage bits must be > 0 for this element to exist, 1 = 1 byte, 2 = 2 bytes, 3 = 4 bytes.
- * 		[5-1st] data type bits - defines the attribute type, see {@link XMLHandler}, one of the bits defines whether the
+ * 		[5-1st] data type bits - defines the attribute type, see {@link XmlHandler}, one of the bits defines whether the
  * 		attribute is an array or not.
  * 	attribute array length (if attribute data type is an array) - (variable bytes)
  * 		Big-endian integer equal to the length of the attribute's array, see the attribute format byte array storage bits
@@ -104,12 +104,12 @@ import xml.XMLTagImpl;
  * 		Defined by the attribute's data type, int = 4 bytes, etc.
  * 
  * Data block type
- * 	block ID - (2 bytes) ID of block type, see {@link XMLHandler} for some default block types, including, data, name, etc.
+ * 	block ID - (2 bytes) ID of block type, see {@link XmlHandler} for some default block types, including, data, name, etc.
  * 	format tag - (1 byte)
  * 		[8th] name bit - 1 means the data contains a name string directly before the data 
  * 		[7-6th] array storage bits - (if the data type is an array type) define number of bytes storing the data array
  * 		length, 0 = no array only one data element, 1 = 1 byte, 2 = 2 bytes, 3 = 4 bytes.
- * 		[5-1st] data type bits - defines the data type, see {@link XMLHandler}, one of the bits defines whether the
+ * 		[5-1st] data type bits - defines the data type, see {@link XmlHandler}, one of the bits defines whether the
  * 		data is an array or not.
  * 	data array length (if data type is an array type) - (variable bytes)
  * 		Big-endian integer equal the length of the data's array, see the data format byte array storage bits
@@ -118,7 +118,7 @@ import xml.XMLTagImpl;
  * 		Defined by the data's data type found in the data format byte earlier, int = 4 bytes, etc.
  * 
  * Tag block type
- * 	block ID - (2 bytes) ID of block type, see {@link XMLHandler} for some default block types, including, data, name, etc.
+ * 	block ID - (2 bytes) ID of block type, see {@link XmlHandler} for some default block types, including, data, name, etc.
  * 	tag byte - (1 byte)
  * 		[8th] nested bit - 1 means the block is a parent block, 0 means it is a leaf block
  * 		[7th] attribute bit - 1 means the tag block will contain an attribute block
@@ -127,27 +127,28 @@ import xml.XMLTagImpl;
  * 	attribute block (if the attribute bit is set) - contains variable number of attributes
  * 	data block (if the data bit is set) - contains tag data
  * </pre>
- * Data types can be found in {@link XMLHandler}, such as {@link XMLHandler#BYTE_TYPE}, and {@link XMLHandler#ARRAY_TYPE} for arrays.
+ * Data types can be found in {@link XmlHandler}, such as {@link XmlHandler#BYTE_TYPE}, and {@link XmlHandler#ARRAY_TYPE} for arrays.
  * @author TeamworkGuy2
  * @since 2013-2-1
  * TODO add support for {@link #peekNextBlock()} to work properly with {@link #readClosingBlock()}
  */
-public class XMLInputStream implements XMLInput {
+public class XmlInputStream implements XmlInput {
 	private DataInput in;
 	private List<String> tagStack;
 	private List<Object> tempAttributeList;
 	private int tagsRead;
+	private String lastReadTagElementName = null;
 
-	private XMLTag lastOpeningTag;
-	private XMLAttributes attributeStack;
+	private XmlTag lastOpeningTag;
+	private XmlAttributes attributeStack;
 	/** An array of two values:<br/>
 	 * The first index is the tag's data type.
 	 * The second index in the tag's data array length if it is an array
 	 */
 	private int[] tagDataTypeAndArrayLength = new int[2];
 
-	private XMLTag peekHeader;
-	private XMLAttributes peekAttributeStack;
+	private XmlTag peekHeader;
+	private XmlAttributes peekAttributeStack;
 	/** An array of two values:<br/>
 	 * The first index is the peek tag's data type.
 	 * The second index in the peek tag's data array length if it is an array
@@ -155,19 +156,19 @@ public class XMLInputStream implements XMLInput {
 	private int[] peekTagDataTypeAndArrayLength = new int[2];
 
 
-	/** Create a data converter to read XML data from binary XML data
-	 * It is recommended to encode strings using the {@link XMLHandler#STRING_TYPE} type
+	/** Create a data converter to read XML data from a binary XML data format.
+	 * It is recommended to encode strings using the {@link XmlHandler#STRING_TYPE} type
 	 * to encode strings that may contain unicode characters.
-	 * @param in - the input stream containing the binary XML data written by a {@link XMLOutputStream}
+	 * @param in the input stream containing the binary XML data written by a {@link XmlOutputStream}
 	 */
-	public XMLInputStream(DataInput in) {
+	public XmlInputStream(DataInput in) {
 		super();
 		if(in == null) { throw new IllegalArgumentException("The DataInput stream cannot be null"); }
 		this.in = in;
 		this.tagStack = new ArrayList<String>();
 		this.tempAttributeList = new ArrayList<Object>();
-		this.attributeStack = new XMLAttributes();
-		this.peekAttributeStack = new XMLAttributes();
+		this.attributeStack = new XmlAttributes();
+		this.peekAttributeStack = new XmlAttributes();
 		this.tagsRead = 0;
 	}
 
@@ -312,8 +313,100 @@ public class XMLInputStream implements XMLInput {
 
 
 	@Override
-	public XMLTag readOpeningBlock(String name) throws IOException {
-		XMLTag tag = readNextBlock();
+	public void read(byte[] b) throws IOException {
+		readTagElement(false);
+		in.readFully(b, 0, b.length);
+	}
+
+
+	@Override
+	public void read(byte[] b, int off, int len) throws IOException {
+		readTagElement(false);
+		in.readFully(b, off, len);
+	}
+
+
+	@Override
+	public boolean readBoolean() throws IOException {
+		readTagElement(false);
+		boolean value = in.readBoolean();
+		return value;
+	}
+
+
+	@Override
+	public byte readByte() throws IOException {
+		readTagElement(false);
+		byte value = in.readByte();
+		return value;
+	}
+
+
+	@Override
+	public char readChar() throws IOException {
+		readTagElement(false);
+		char value = in.readChar();
+		return value;
+	}
+
+
+	@Override
+	public double readDouble() throws IOException {
+		readTagElement(false);
+		double value = in.readDouble();
+		return value;
+	}
+
+
+	@Override
+	public float readFloat() throws IOException {
+		readTagElement(false);
+		float value = in.readFloat();
+		return value;
+	}
+
+
+	@Override
+	public int readInt() throws IOException {
+		readTagElement(false);
+		int value = in.readInt();
+		return value;
+	}
+
+
+	@Override
+	public long readLong() throws IOException {
+		readTagElement(false);
+		long value = in.readLong();
+		return value;
+	}
+
+
+	@Override
+	public short readShort() throws IOException {
+		readTagElement(false);
+		short value = in.readShort();
+		return value;
+	}
+
+
+	@Override
+	public String readUTF() throws IOException {
+		readTagElement(false);
+		String value = in.readUTF();
+		return value;
+	}
+
+
+	@Override
+	public String getLastElementName() {
+		return lastReadTagElementName;
+	}
+
+
+	@Override
+	public XmlTag readOpeningBlock(String name) throws IOException {
+		XmlTag tag = readNextBlock();
 		// If the element name does not match, throw an exception
 		String tagName = tag.getHeaderName();
 		if(!name.equals(tagName)) { throwTagMissmatchException(name, tagName); }
@@ -323,7 +416,7 @@ public class XMLInputStream implements XMLInput {
 
 
 	@Override
-	public XMLTag readNextBlock() throws IOException {
+	public XmlTag readNextBlock() throws IOException {
 		// If the next header has not been read (peeked at), read the next header
 		if(peekHeader == null) {
 			this.lastOpeningTag = readTag(in, attributeStack, tagDataTypeAndArrayLength, tempAttributeList, true);
@@ -335,7 +428,7 @@ public class XMLInputStream implements XMLInput {
 			peekHeader = null;
 			// Switch the attribute stacks so that the current attributes are the peek attributes
 			// and reuse the current attributes as the next peek attributes by clearing them
-			XMLAttributes tempAttributes = attributeStack;
+			XmlAttributes tempAttributes = attributeStack;
 			attributeStack = peekAttributeStack;
 			tempAttributes.clear();
 			peekAttributeStack = tempAttributes;
@@ -349,7 +442,7 @@ public class XMLInputStream implements XMLInput {
 
 
 	@Override
-	public XMLTag peekNextBlock() throws IOException {
+	public XmlTag peekNextBlock() throws IOException {
 		/* If the next header has not been read, peek and read it
 		 * The rest of the code saves the current head values and restores them
 		 * after {@link #readTag(boolean)} is called since that method
@@ -361,8 +454,8 @@ public class XMLInputStream implements XMLInput {
 		 * {@link #getCurrentHeaderBlockAttributes()} or {@link #getCurrentHeaderBlock()}.
 		 */
 		if(peekHeader == null) {
-			XMLTag tempHeader = lastOpeningTag;
-			XMLAttributes tempAttributes = attributeStack;
+			XmlTag tempHeader = lastOpeningTag;
+			XmlAttributes tempAttributes = attributeStack;
 			int[] tempDataTypeAndArrayLength = tagDataTypeAndArrayLength;
 			tagDataTypeAndArrayLength = peekTagDataTypeAndArrayLength;
 			peekTagDataTypeAndArrayLength = tempDataTypeAndArrayLength;
@@ -391,7 +484,8 @@ public class XMLInputStream implements XMLInput {
 	 * @throws IOException if there is an error reading the XML tag
 	 */
 	private String readTagElement(boolean shouldContainNested) throws IOException {
-		XMLTag tag = readTag(in, attributeStack, tagDataTypeAndArrayLength, tempAttributeList, shouldContainNested);
+		XmlTag tag = readTag(in, attributeStack, tagDataTypeAndArrayLength, tempAttributeList, shouldContainNested);
+		lastReadTagElementName = tag.getHeaderName();
 		return tag.getHeaderName();
 	}
 
@@ -404,17 +498,17 @@ public class XMLInputStream implements XMLInput {
 	 * @return the new header tag read
 	 * @throws IOException if there is an IO or XML related error reading the input stream
 	 */
-	private static XMLTag readTag(DataInput reader, XMLAttributes attributes, int[] tagData, List<Object> tempList, boolean shouldContainNested) throws IOException {
+	private static XmlTag readTag(DataInput reader, XmlAttributes attributes, int[] tagData, List<Object> tempList, boolean shouldContainNested) throws IOException {
 		String tagName = null;
-		XMLTag newTag = null;
+		XmlTag newTag = null;
 
 		try {
 			// Read the tag format
 			byte tagFormat = reader.readByte();
 			// Is the element a leaf or does it contain nested elements
-			boolean isLeaf = (tagFormat & XMLHandler.CONVERTER_CONTAINS_NESTED) != XMLHandler.CONVERTER_CONTAINS_NESTED;
+			boolean isLeaf = (tagFormat & XmlHandler.CONVERTER_CONTAINS_NESTED) != XmlHandler.CONVERTER_CONTAINS_NESTED;
 			// Get the number of bytes storing the attribute count or non if there are no attributes
-			byte attributeCountBytes = (byte)((tagFormat & XMLHandler.CONVERTER_ATTRIBUTE_BYTES) >>> XMLHandler.CONVERTER_ATTRIBUTE_BYTES_SHIFT);
+			byte attributeCountBytes = (byte)((tagFormat & XmlHandler.CONVERTER_ATTRIBUTE_BYTES) >>> XmlHandler.CONVERTER_ATTRIBUTE_BYTES_SHIFT);
 			// Get 'attribute count size' number of bytes, or zero bytes if there are not attributes, and read them into an int value
 			int attributeCount = readIntFromBytes(reader, attributeCountBytes);
 
@@ -431,11 +525,11 @@ public class XMLInputStream implements XMLInput {
 				// Read the attribute's info byte
 				attribFormat = reader.readByte();
 				// The attribute's data array type
-				attribType = (byte)(attribFormat & XMLHandler.DATA_TYPE);
+				attribType = (byte)(attribFormat & XmlHandler.DATA_TYPE);
 				// Is the attribute's data an array of data
-				isArrayType = (attribFormat & XMLHandler.ARRAY_TYPE) != 0;
+				isArrayType = (attribFormat & XmlHandler.ARRAY_TYPE) != 0;
 				// Calculate number of bytes storing the length of the attribute data array
-				arrayLengthBytes = (byte)((attribFormat & XMLHandler.CONVERTER_ATTRIBUTE_BYTES) >>> XMLHandler.CONVERTER_ATTRIBUTE_BYTES_SHIFT);
+				arrayLengthBytes = (byte)((attribFormat & XmlHandler.CONVERTER_ATTRIBUTE_BYTES) >>> XmlHandler.CONVERTER_ATTRIBUTE_BYTES_SHIFT);
 				// Read the length of the attribute data array
 				arrayLength = readIntFromBytes(reader, arrayLengthBytes);
 				// Read the attribute's name
@@ -457,17 +551,17 @@ public class XMLInputStream implements XMLInput {
 			// If the tag is a leaf tag (does not contain nested tags) then it will contain data
 			dataFormat = reader.readByte();
 			// Calculate number of bytes storing the length of the data array
-			dataArrayLengthBytes = (byte)((dataFormat & XMLHandler.CONVERTER_ATTRIBUTE_BYTES) >>> XMLHandler.CONVERTER_ATTRIBUTE_BYTES_SHIFT);
+			dataArrayLengthBytes = (byte)((dataFormat & XmlHandler.CONVERTER_ATTRIBUTE_BYTES) >>> XmlHandler.CONVERTER_ATTRIBUTE_BYTES_SHIFT);
 			// Read the length of the data array
 			dataArrayLength = readIntFromBytes(reader, dataArrayLengthBytes);
 			// Store the data type and array length in the tag data array
-			tagData[0] = (dataFormat & XMLHandler.ANY_TYPE);
+			tagData[0] = (dataFormat & XmlHandler.ANY_TYPE);
 			tagData[1] = dataArrayLength;
 
 			// Read the tag name
 			tagName = reader.readUTF();
 
-			//System.out.println("Read tag: " + tag + ", attribs: " + attributeCount + "(" + attributeCountBytes + "), nested: " + ((tagInfo & XMLHandler.CONVERTER_CONTAINS_NESTED) != 0) + ", data: " + dataInfo + "(" + dataArrayLengthBytes + ")");
+			//System.out.println("Read tag: " + tag + ", attribs: " + attributeCount + "(" + attributeCountBytes + "), nested: " + ((tagInfo & XmlHandler.CONVERTER_CONTAINS_NESTED) != 0) + ", data: " + dataInfo + "(" + dataArrayLengthBytes + ")");
 
 			// Allow another method (normally this method's calling method) to then read the tag's data
 			// A binary tag in this format has no closing tag, so we do not need to worry about reading that
@@ -483,7 +577,7 @@ public class XMLInputStream implements XMLInput {
 			throw new IOException(xmlse);
 		}
 		// Create and return the newly read tag
-		newTag = new XMLTagImpl(tagName, null, DataHeader.OPENING);
+		newTag = new XmlTagImpl(tagName, null, DataHeader.OPENING);
 		return newTag;
 	}
 
@@ -495,13 +589,13 @@ public class XMLInputStream implements XMLInput {
 
 
 	@Override
-	public XMLAttributes getCurrentBlockHeaderAttributes() {
+	public XmlAttributes getCurrentBlockHeaderAttributes() {
 		return this.attributeStack;
 	}
 
 
 	@Override
-	public XMLTag getCurrentBlockHeader() {
+	public XmlTag getCurrentBlockHeader() {
 		return lastOpeningTag;
 	}
 
@@ -520,7 +614,7 @@ public class XMLInputStream implements XMLInput {
 
 	/** Read a specified data type from the specified DataInput stream
 	 * @param reader - the DataInput stream to read the data type from
-	 * @param dataType - the data type as defined in XMLHandler, such as XMLHandler.BYTE_TYPE
+	 * @param dataType - the data type as defined in XmlHandler, such as XmlHandler.BYTE_TYPE
 	 * @return the data value read from the DataInput stream
 	 * @throws IOException if there is an error reading the DataInput stream
 	 */
@@ -528,23 +622,23 @@ public class XMLInputStream implements XMLInput {
 	private static Object readDataType(DataInput reader, int dataType) throws IOException {
 		// Read the data type's value
 		switch(dataType) {
-		case (byte)XMLHandler.BYTE_TYPE:
+		case (byte)XmlHandler.BYTE_TYPE:
 			return reader.readByte();
-		case (byte)XMLHandler.SHORT_TYPE:
+		case (byte)XmlHandler.SHORT_TYPE:
 			return reader.readShort();
-		case (byte)XMLHandler.INT_TYPE:
+		case (byte)XmlHandler.INT_TYPE:
 			return reader.readInt();
-		case (byte)XMLHandler.LONG_TYPE:
+		case (byte)XmlHandler.LONG_TYPE:
 			return reader.readLong();
-		case (byte)XMLHandler.FLOAT_TYPE:
+		case (byte)XmlHandler.FLOAT_TYPE:
 			return reader.readFloat();
-		case (byte)XMLHandler.DOUBLE_TYPE:
+		case (byte)XmlHandler.DOUBLE_TYPE:
 			return reader.readDouble();
-		case (byte)XMLHandler.BOOLEAN_TYPE:
+		case (byte)XmlHandler.BOOLEAN_TYPE:
 			return reader.readBoolean();
-		case (byte)XMLHandler.CHAR_TYPE:
+		case (byte)XmlHandler.CHAR_TYPE:
 			return reader.readChar();
-		case (byte)XMLHandler.STRING_TYPE:
+		case (byte)XmlHandler.STRING_TYPE:
 			return reader.readUTF();
 		default:
 			throw new IllegalStateException("Cannot read XML binary value with no data type");
@@ -575,39 +669,39 @@ public class XMLInputStream implements XMLInput {
 
 	/** Read a specified attribute type from the specified DataInput stream
 	 * @param reader - the DataInput stream to read the data type from
-	 * @param dataType - the data type as defined in XMLHandler, such as XMLHandler.BYTE_TYPE
+	 * @param dataType - the data type as defined in XmlHandler, such as XmlHandler.BYTE_TYPE
 	 * @param attributeName - the name of the attribute to add to the attributes
 	 * @param attributes - the group of XML attributes to add this attribute value to
 	 * @throws IOException if there is an error reading the DataInput stream
 	 */
-	private static void readAttributeType(DataInput reader, int dataType, String attributeName, XMLAttributes attributes) throws IOException {
+	private static void readAttributeType(DataInput reader, int dataType, String attributeName, XmlAttributes attributes) throws IOException {
 		// Read the data type's value
 		switch(dataType) {
-		case (byte)XMLHandler.BYTE_TYPE:
-			attributes.addAttribute(attributeName, reader.readByte());
+		case (byte)XmlHandler.BYTE_TYPE:
+			attributes.addAttributeByte(attributeName, reader.readByte());
 		break;
-		case (byte)XMLHandler.SHORT_TYPE:
-			attributes.addAttribute(attributeName, reader.readShort());
+		case (byte)XmlHandler.SHORT_TYPE:
+			attributes.addAttributeShort(attributeName, reader.readShort());
 		break;
-		case (byte)XMLHandler.INT_TYPE:
-			attributes.addAttribute(attributeName, reader.readInt());
+		case (byte)XmlHandler.INT_TYPE:
+			attributes.addAttributeInt(attributeName, reader.readInt());
 		break;
-		case (byte)XMLHandler.LONG_TYPE:
-			attributes.addAttribute(attributeName, reader.readLong());
+		case (byte)XmlHandler.LONG_TYPE:
+			attributes.addAttributeLong(attributeName, reader.readLong());
 		break;
-		case (byte)XMLHandler.FLOAT_TYPE:
-			attributes.addAttribute(attributeName, reader.readFloat());
+		case (byte)XmlHandler.FLOAT_TYPE:
+			attributes.addAttributeFloat(attributeName, reader.readFloat());
 		break;
-		case (byte)XMLHandler.DOUBLE_TYPE:
-			attributes.addAttribute(attributeName, reader.readDouble());
+		case (byte)XmlHandler.DOUBLE_TYPE:
+			attributes.addAttributeDouble(attributeName, reader.readDouble());
 		break;
-		case (byte)XMLHandler.BOOLEAN_TYPE:
-			attributes.addAttribute(attributeName, reader.readBoolean());
+		case (byte)XmlHandler.BOOLEAN_TYPE:
+			attributes.addAttributeBoolean(attributeName, reader.readBoolean());
 		break;
-		case (byte)XMLHandler.CHAR_TYPE:
-			attributes.addAttribute(attributeName, reader.readChar());
+		case (byte)XmlHandler.CHAR_TYPE:
+			attributes.addAttributeChar(attributeName, reader.readChar());
 		break;
-		case (byte)XMLHandler.STRING_TYPE:
+		case (byte)XmlHandler.STRING_TYPE:
 			attributes.addAttribute(attributeName, reader.readUTF());
 		break;
 		default:
@@ -618,7 +712,7 @@ public class XMLInputStream implements XMLInput {
 
 	/** Read an array of the specified attribute type from the specified DataInput stream
 	 * @param reader - the DataInput stream to read the data type from
-	 * @param dataType - the data type as defined in XMLHandler, such as XMLHandler.BYTE_TYPE
+	 * @param dataType - the data type as defined in XmlHandler, such as XmlHandler.BYTE_TYPE
 	 * @param arrayLength - the number of data values to read
 	 * @param attributeName - the name of the attribute to add to the attributes
 	 * @param attributes - the group of XML attributes to add this attribute array to
@@ -626,59 +720,59 @@ public class XMLInputStream implements XMLInput {
 	 * group of attributes
 	 * @throws IOException if there is an error reading the DataInput stream
 	 */
-	private static void readAttributeTypeArray(DataInput reader, int dataType, int arrayLength, String attributeName, XMLAttributes attributes, List<Object> tempValues) throws IOException {
+	private static void readAttributeTypeArray(DataInput reader, int dataType, int arrayLength, String attributeName, XmlAttributes attributes, List<Object> tempValues) throws IOException {
 		tempValues.clear();
 		// Read the data type's value
 		switch(dataType) {
-		case (byte)XMLHandler.BYTE_TYPE:
+		case (byte)XmlHandler.BYTE_TYPE:
 			for(int a = 0; a < arrayLength; a++) {
 				tempValues.add(reader.readByte());
 			}
 		attributes.addAttribute(attributeName, tempValues);
 		break;
-		case (byte)XMLHandler.SHORT_TYPE:
+		case (byte)XmlHandler.SHORT_TYPE:
 			for(int a = 0; a < arrayLength; a++) {
 				tempValues.add(reader.readShort());
 			}
 		attributes.addAttribute(attributeName, tempValues);
 		break;
-		case (byte)XMLHandler.INT_TYPE:
+		case (byte)XmlHandler.INT_TYPE:
 			for(int a = 0; a < arrayLength; a++) {
 				tempValues.add(reader.readInt());
 			}
 		attributes.addAttribute(attributeName, tempValues);
 		break;
-		case (byte)XMLHandler.LONG_TYPE:
+		case (byte)XmlHandler.LONG_TYPE:
 			for(int a = 0; a < arrayLength; a++) {
 				tempValues.add(reader.readLong());
 			}
 		attributes.addAttribute(attributeName, tempValues);
 		break;
-		case (byte)XMLHandler.FLOAT_TYPE:
+		case (byte)XmlHandler.FLOAT_TYPE:
 			for(int a = 0; a < arrayLength; a++) {
 				tempValues.add(reader.readFloat());
 			}
 		attributes.addAttribute(attributeName, tempValues);
 		break;
-		case (byte)XMLHandler.DOUBLE_TYPE:
+		case (byte)XmlHandler.DOUBLE_TYPE:
 			for(int a = 0; a < arrayLength; a++) {
 				tempValues.add(reader.readDouble());
 			}
 		attributes.addAttribute(attributeName, tempValues);
 		break;
-		case (byte)XMLHandler.BOOLEAN_TYPE:
+		case (byte)XmlHandler.BOOLEAN_TYPE:
 			for(int a = 0; a < arrayLength; a++) {
 				tempValues.add(reader.readBoolean());
 			}
 		attributes.addAttribute(attributeName, tempValues);
 		break;
-		case (byte)XMLHandler.CHAR_TYPE:
+		case (byte)XmlHandler.CHAR_TYPE:
 			for(int a = 0; a < arrayLength; a++) {
 				tempValues.add(reader.readChar());
 			}
 		attributes.addAttribute(attributeName, tempValues);
 		break;
-		case (byte)XMLHandler.STRING_TYPE:
+		case (byte)XmlHandler.STRING_TYPE:
 			for(int a = 0; a < arrayLength; a++) {
 				tempValues.add(reader.readUTF());
 			}
@@ -699,7 +793,7 @@ public class XMLInputStream implements XMLInput {
 	/** Read a XML header from the XML input stream
 	 * @param input the XML input stream to read a header from
 	 */
-	public static final void readHeader(XMLInputStream input) {
+	public static final void readHeader(XmlInputStream input) {
 		input.readHeader();
 	}
 
