@@ -1,6 +1,7 @@
 package xml;
 
-import dataTransfer.DataHeader;
+import base.DataElement;
+import base.ParsedElementType;
 
 /** A XML tag header implementation that stores only the name of an XML tag.
  * @author TeamworkGuy2
@@ -8,54 +9,79 @@ import dataTransfer.DataHeader;
  */
 public class XmlTagImpl implements XmlTag {
 	private String tagName;
-	private String descriptor;
-	private boolean openingHeader;
+	private String content;
+	private ParsedElementType elementType;
 
 
 	/** Create an XML tag block
 	 * @param tagName the name of the parent XML tag surrounding the XML
 	 * data block that is being described by this XML tag.
-	 * @param descriptor an optional descriptor for this XML tag, or null if
-	 * it does not have a descriptor.
-	 * @param openingHeader true if this header represents an opening tag,
-	 * false if it represents a closing header.
+	 * @param content the content of this element
+	 * @param type the type of this tag
 	 */
-	public XmlTagImpl(String tagName, String descriptor, boolean openingHeader) {
+	public XmlTagImpl(String tagName, String content, ParsedElementType type) {
 		this.tagName = tagName;
-		this.descriptor = descriptor;
-		this.openingHeader = openingHeader;
+		this.content = content;
+		this.elementType = type;
+	}
+
+
+	/** Create an XML tag block
+	 * @param tagName the name of the parent XML tag surrounding the XML
+	 * data block that is being described by this XML tag.
+	 * @param content the content of this element
+	 * @param type the type of this tag
+	 * @param type2 an alternative type that this tag might be (due to ambiguity
+	 * between empty element and empty block tags in XML)
+	 */
+	public XmlTagImpl(String tagName, String content, ParsedElementType type, ParsedElementType type2) {
+		this.tagName = tagName;
+		this.content = content;
+		this.elementType = type;
 	}
 
 
 	@Override
-	public boolean isOpeningHeader() {
-		return openingHeader;
+	public boolean isStartBlock() {
+		return elementType == ParsedElementType.HEADER;
 	}
 
 
 	@Override
-	public String getHeaderName() {
+	public boolean isEndBlock() {
+		return elementType == ParsedElementType.FOOTER;
+	}
+
+
+	@Override
+	public boolean isElement() {
+		return elementType == ParsedElementType.ELEMENT;
+	}
+
+
+	@Override
+	public String getName() {
 		return tagName;
 	}
 
 
 	@Override
-	public int getHeaderId() {
+	public String getContent() {
+		return content;
+	}
+
+
+	@Override
+	public int getId() {
 		return -1;
 	}
 
 
 	@Override
-	public String getDescriptor() {
-		return descriptor;
-	}
-
-
-	@Override
 	public boolean equals(Object obj) {
-		if((obj instanceof DataHeader)) {
-			String headerName = ((DataHeader)obj).getHeaderName();
-			int headerId = ((DataHeader)obj).getHeaderId();
+		if((obj instanceof DataElement)) {
+			String headerName = ((DataElement)obj).getName();
+			int headerId = ((DataElement)obj).getId();
 
 			// Check if the header names match
 			boolean nameMatch = (tagName != null) ? (tagName.equals(headerName)) : (headerName == null);
@@ -63,7 +89,7 @@ public class XmlTagImpl implements XmlTag {
 			boolean idMatch = (-1 == headerId);
 
 			// If the names, IDs, or both match and the remaining non matching field has at
-			// least one empty value, then the headers are equal, see {@link DataHeader#equals(Object)}
+			// least one empty value, then the headers are equal, see {@link DataElement#equals(Object)}
 			return (nameMatch || idMatch) && !(!nameMatch && -1 < 0) && !(!idMatch && tagName == null);
 		}
 		return false;

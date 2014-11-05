@@ -14,13 +14,16 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
+import base.DataElement;
+import base.DataTransferInput;
+import base.DataTransferOutput;
+import base.DataTransferableFactory;
+import base.DataTransferableFormat;
 
-import xml.XmlHandler;
-import xml.XmlInputSimple;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 
 public class MainIo {
 
@@ -63,95 +66,116 @@ public class MainIo {
 	}
 
 
-	public static void printPlainXmlEvents(File file, Charset charset) throws IOException, XMLStreamException {
-		XMLInputFactory xmlFactory = XMLInputFactory.newFactory();
-		FileInputStream stream = new FileInputStream(file);
-		InputStream input = new BufferedInputStream(stream);
-		XMLStreamReader reader = xmlFactory.createXMLStreamReader(input, charset.name());
+	public static void wrapUnwrapStrTest() {
+		String[] strs = {
+				"\"alpha",
+				"\\bet\"a",
+				"\"\"charlie\"\"",
+				"\\",
+				"\\\\",
+				"\"",
+				"\"\"",
+		};
 
-		int event = reader.getEventType();
-		while(event != XMLStreamConstants.END_DOCUMENT) {
-			event = reader.next();
-			System.out.print(XmlHandler.toString(event));
-			if(event == XMLStreamConstants.CHARACTERS) {
-				System.out.print(" [" + reader.getText() + "]");
-			}
-			else if(event == XMLStreamConstants.START_ELEMENT || event == XMLStreamConstants.END_ELEMENT) {
-				System.out.print(" " + reader.getLocalName());
-			}
-			System.out.println();
+		StringBuilder src = new StringBuilder();
+		StringBuilder dst = new StringBuilder();
+		for(String str : strs) {
+			System.out.println("str : " + str);
+			DataTransferableFactory.wrapChar(str, '\\', '\\', '"', src);
+			System.out.println("wrap: " + src.toString());
+			DataTransferableFactory.unwrapChar(src, 0, '\\', '"', dst);
+			System.out.println("unwp: " + dst.toString());
+			src.setLength(0);
+			dst.setLength(0);
 		}
 	}
 
 
-	public static void printSimpleXmlReader(File file, Charset charset) throws XMLStreamException, FileNotFoundException {
-		XMLInputFactory xmlFactory = XMLInputFactory.newFactory();
-		FileInputStream stream = new FileInputStream(file);
-		InputStream input = new BufferedInputStream(stream);
-		XMLStreamReader reader = xmlFactory.createXMLStreamReader(input, charset.name());
-		XmlInputSimple simpleXml = new XmlInputSimple(reader);
-
-		boolean found = false;
-		String tagName = null;
-		while(!simpleXml.isEmpty()) {
-			String openingName = simpleXml.readTag();
-			found = simpleXml.finishElement(openingName);
-			tagName = simpleXml.getLastTagName();
-			System.out.println((found ? "element " : (simpleXml.isLastTagOpening() ? "start " : "end ")) + tagName + ": " + (found ? simpleXml.getLastElementContents() : ""));
+	public static void printPlainJsonEvents(File file, Charset charset) throws JsonParseException, FileNotFoundException, IOException {
+		JsonParser jsonIn = new JsonFactory().createParser(new FileInputStream(file));
+		JsonToken token = jsonIn.nextToken();
+		while(token != null) {
+			System.out.println(jsonIn.getCurrentName() + ": " + token);
+			token = jsonIn.nextToken();
 		}
 	}
 
 
-	public static void main(String[] args) throws IOException, XMLStreamException {
+	public static void printEvents(DataTransferInput in) throws IOException {
+		DataElement token = in.readNext();
+		System.out.println("==Print data transferable events==");
+		while(token != null) {
+			System.out.println((token.isElement() ? "ELEMENT" : (token.isStartBlock() ? "START" : token.isEndBlock() ? "END" : "UNKNOWN"))
+					+ " " + in.getCurrentName() + ": " + token.getContent());
+			token = in.readNext();
+		}
+		System.out.println("==End print data transferable events==");
+	}
+
+
+	public static void main(String[] args) throws IOException {
+		String src = "a \\\"block\\\" char '\\\"'";
+		StringBuilder strDst = new StringBuilder();
+		System.out.println(DataTransferableFactory.unwrapChar(src, 0, '\\', '"', strDst) + ": " + strDst.toString());
 		//com.sun.org.apache.xerces.internal.impl.XMLStreamReaderImpl;
 		Charset charset = Charset.forName("UTF-8");
+		DataTransferableFormat format = DataTransferableFormat.XML;
+		String formatName = format.name().toLowerCase();
+		String fileName = formatName + "_test." + formatName;
+		File file = new File(fileName);
 
-		File file = new File("xml_test.xml");
-		printPlainXmlEvents(file, charset);
+		//JsonTest test = new JsonTest(file, charset);
+		ReadWriteTest.writeFile(format, file);
+		System.out.println("successfully wrote " + format + " data to " + file);
+		ReadWriteTest.readFile(format, file);
+		System.out.println("successfully read " + format + " data to " + file);
 
-		System.out.println("====");
-		printSimpleXmlReader(file, charset);
+		File employeeFile = new File("stream_emp.txt");
 
-		/*
+		Employee emplOut = Employee.createEmployee();
+		DataTransferOutput out = DataTransferableFactory.createWriter(format, employeeFile, true);
+		emplOut.writeData(out);
+		out.close();
+
+		DataTransferInput in = DataTransferableFactory.createReader(format, employeeFile, true);
+		Employee emplIn = new Employee();
+		emplIn.readData(in);
+		in.close();
+
+		System.out.println("Employee write equal read: " + emplIn.equals(emplOut));
+
+
+		File widgetFile = new File("widget." + formatName);
+
 		// The object to write
-		Widget w = new Widget("Alpha", 42, new String[] {"A", "02", "C", "04", "E", "06", "G"});
-
-		File dataFile = new File("widget.dat");
+		Widget w = new Widget("Alpha", 42, new SubWidget[] {
+				new SubWidget(new String[] {"A", "02", "C"}, "first sub widget"),
+				new SubWidget(new String[] {"04", "E"}, "special 2 item sub widget"),
+				new SubWidget(new String[] {"06", "G", "G6"}, null),
+				new SubWidget(new String[] {}, ""),
+			});
 		// Create a file output stream for the XML output
-		OutputStream outStream = new FileOutputStream(dataFile);
 		// Create an XML output writer and convert it to data output writer
-		XmlOutput outXml = XmlHandler.createXMLOutput(outStream, true, charset, true);
-		DataTransferOutput out = new XmlTransferOutput(outXml);
-
+		out = DataTransferableFactory.createWriter(format, new FileOutputStream(widgetFile), charset);
 		// Write the object
 		w.writeData(out);
-
-		// Close the data output writer and it's underlying XML stream which
-		// closes the underlying file stream
 		out.close();
 
 		// The object to read from the file
 		Widget copy = new Widget();
 
-		System.out.print("Copy empty:\t ");
-		System.out.println(copy);
+		System.out.println("Copy empty:\t " + copy);
 
 		// Create the file input reader for the XML input
-		InputStream inStream = new FileInputStream(dataFile);
 		// Create the XML input reader and convert it to a data input reader
-		DataTransferInput in = new XmlTransferInput(XmlHandler.createXMLInput(inStream, true, charset, true, true, true));
-
+		in = DataTransferableFactory.createReader(format, new FileInputStream(widgetFile), charset);
 		// Read the object
 		copy.readData(in);
-
 		in.close();
 
-		System.out.print("Original:\t ");
-		System.out.println(w);
-
-		System.out.print("Copy parsed:\t ");
-		System.out.println(copy);
-		*/
+		System.out.println("Widget write equal read: " + (w.equals(copy)));
+		System.out.println("Original:    " + w);
+		System.out.println("Copy parsed: " + w);
 	}
 
 }

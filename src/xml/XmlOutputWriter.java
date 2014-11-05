@@ -216,30 +216,18 @@ public class XmlOutputWriter implements XmlOutput, Closeable {
 
 
 	@Override
-	public void writeUTF(String name, String s) throws IOException {
+	public void writeString(String name, String s) throws IOException {
 		pushTagNoLine(name);
-		this.output.write(s);
+		this.output.write(XmlHandler.validateElement(s));
 		popTagNoLine();
 	}
 
 
 	@Override
-	public void writeUTF(String name, String s, XmlAttributes attributes) throws IOException {
+	public void writeString(String name, String s, XmlAttributes attributes) throws IOException {
 		pushTagNoLine(name, attributes);
-		this.output.write(s);
+		this.output.write(XmlHandler.validateElement(s));
 		popTagNoLine();
-	}
-
-
-	@Override
-	public void writeOpeningBlock(String name) throws IOException {
-		writeOpeningBlock(name, (String)null);
-	}
-
-
-	@Override
-	public void writeOpeningBlock(String name, XmlAttributes attributes) throws IOException {
-		writeOpeningBlock(name, (String)null, attributes);
 	}
 
 
@@ -249,19 +237,12 @@ public class XmlOutputWriter implements XmlOutput, Closeable {
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
 	@Override
-	public void writeOpeningBlock(String name, String descriptor) throws IOException {
+	public void writeStartBlock(String name) throws IOException {
 		Writer out = this.output;
 		writeIndentation(out, indentationCount);
 		this.indentationCount++;
 		out.write(OPEN);
 		out.write(name);
-		if(descriptor != null) {
-			out.write(' ');
-			out.write(XmlHandler.DESCRIPTOR_ID);
-			out.write("=\"");
-			out.write(descriptor);
-			out.write('\"');
-		}
 		out.write(CLOSE);
 		out.write(lineSeparator);
 		this.tagStack.add(name);
@@ -276,20 +257,13 @@ public class XmlOutputWriter implements XmlOutput, Closeable {
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
 	@Override
-	public void writeOpeningBlock(String name, String descriptor, XmlAttributes attributes) throws IOException {
+	public void writeStartBlock(String name, XmlAttributes attributes) throws IOException {
 		Writer out = this.output;
 		writeIndentation(out, indentationCount);
 		this.indentationCount++;
 		out.write(OPEN);
 		out.write(name);
-		// Write the descriptor and attributes
-		if(descriptor != null) {
-			out.write(' ');
-			out.write(XmlHandler.DESCRIPTOR_ID);
-			out.write("=\"");
-			out.write(descriptor);
-			out.write('\"');
-		}
+		// Write the attributes
 		if(attributes != null) {
 			List<String> names = attributes.getAttributeNames();
 			List<Object> values = attributes.getAttributeValues();
@@ -322,7 +296,7 @@ public class XmlOutputWriter implements XmlOutput, Closeable {
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
 	@Override
-	public void writeClosingBlock() throws IOException {
+	public void writeEndBlock() throws IOException {
 		if(this.indentationCount > 0) {
 			this.indentationCount--;
 		}
