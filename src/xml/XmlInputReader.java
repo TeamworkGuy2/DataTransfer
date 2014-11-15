@@ -261,7 +261,7 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 
 	/** Get the element name of the last read element.
 	 * This only applies to element which were read using one of the parameterless read calls, such as:<br/>
-	 * {@link #readByte()}, {@link #readFloat()}, {@link #readUTF()}, etc.
+	 * {@link #readByte()}, {@link #readFloat()}, {@link #readString()}, etc.
 	 * @return the name of the last read element
 	 */
 	@Override
@@ -343,11 +343,11 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 
 
 	/** Read the next opening or closing tag and return it without modifying the stream.
-	 * The next call to {@link #readOpeningBlock(String)}, {@link #readClosingBlock()}
+	 * The next call to {@link #readStartBlock(String)}, {@link #readEndBlock()}
 	 * or an equivalent method will return this tag.
 	 * TODO: Note: due to ambiguity of empty elements in XML, an empty tag like {@code <element></element>}
 	 * is read as a {@link ParsedElementType#HEADER} and {@link ParsedElementType#FOOTER FOOTER},
-	 * not an {@link ParsedElementType#ELEMENT ELEMENT}. To read an empty element, call {@link #readUTF()}
+	 * not an {@link ParsedElementType#ELEMENT ELEMENT}. To read an empty element, call {@link #readString()}
 	 * @return the tag read from the input stream
 	 * @throws XMLStreamException if there is a format related error while reading from the to input stream
 	 */
@@ -385,14 +385,13 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 	/** General purpose method that reads starting blocks, elements, or ending blocks<br>
 	 * TODO: Note: due to ambiguity of empty elements in XML, an empty tag like {@code <element></element>}
 	 * is read as a {@link ParsedElementType#HEADER} and {@link ParsedElementType#FOOTER FOOTER},
-	 * not an {@link ParsedElementType#ELEMENT ELEMENT}. To read an empty element, call {@link #readUTF()}
+	 * not an {@link ParsedElementType#ELEMENT ELEMENT}. To read an empty element, call {@link #readString()}
 	 * @param reader the reader to read the XML data from
 	 * @param readFirst true to read whatever element occurs first in the input stream
 	 * @param elmType the type of element to read (only used if {@code readFirst} is false)
 	 * @param matchName true to match {@code elementName} exactly, even if that requires skipping elements,
 	 * false to read the first matching element
 	 * @param elementName the name of the element to read, only applies if {@code matchName} is true
-	 * @param dst the {@code XmlTag} to store the parsed contents in 
 	 * @throws XMLStreamException
 	 */
 	public XmlTag nextElement(XMLStreamReader reader, boolean readFirst, int elmType, boolean matchName,

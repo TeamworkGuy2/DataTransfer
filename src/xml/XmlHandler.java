@@ -297,8 +297,6 @@ public class XmlHandler {
 	 * @param doBuffer true to wrap the output stream in a buffered output stream,
 	 * false to use it without modification
 	 * @param charset the charset to use for textual data, if null the default US-ASCII charset is used.
-	 * @param textFormat true to create an XML text writer, false to create a
-	 * binary XML output stream
 	 * @return the XML output stream created from the output stream
 	 * @throws IOException if there is an error creating the XML output stream
 	 */

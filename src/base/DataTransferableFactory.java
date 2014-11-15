@@ -39,7 +39,7 @@ public class DataTransferableFactory {
 	 * @param file the file source to read data from
 	 * @param doBuffer true to wrap the input stream in a buffered input stream,
 	 * false to use it without modification
-	 * @return
+	 * @return the new {@link DataTransferInput} stream created from the specified file
 	 * @throws IOException
 	 */
 	public static DataTransferInput createReader(DataTransferableFormat type, File file, boolean doBuffer) throws IOException {
@@ -97,7 +97,7 @@ public class DataTransferableFactory {
 	 * @param file the file destination to write data to
 	 * @param doBuffer true to wrap the output stream in a buffered output stream,
 	 * false to use it without modification
-	 * @return
+	 * @return the new {@link DataTransferOutput} stream created from the specified file
 	 * @throws IOException
 	 */
 	public static DataTransferOutput createWriter(DataTransferableFormat type, File file, boolean doBuffer)
@@ -319,30 +319,34 @@ public class DataTransferableFactory {
 
 
 	/**
-	 * @param strB
-	 * @param offset
-	 * @param chReplace
-	 * @param chEnd
-	 * @param dst
+	 * @param strSrc the source to reach characters from
+	 * @param offset the offset into {@code strSrc} at which to start reading characters
+	 * @param chReplace the char to replace
+	 * @param chEnd stop reading when this char is reached
+	 * @param dst the destination to store the read characters in
 	 * @return the index of the {@code chEnd} that parsing stopped at
 	 */
-	public static final int unwrapChar(CharSequence strSrc, int offset, char chReplace, char chEnd, StringBuilder dst) {
+	public static final int unwrapChar(CharSequence strSrc, int offset, char chReplace, char chEnd, Appendable dst) {
 		int i = offset;
-		for(int size = strSrc.length(); i < size; i++) {
-			char chI = strSrc.charAt(i);
-			if(chI == chEnd) {
-				return i;
-			}
-			if(chI == chReplace) {
-				i++;
-				if(i >= size) {
+		try {
+			for(int size = strSrc.length(); i < size; i++) {
+				char chI = strSrc.charAt(i);
+				if(chI == chEnd) {
 					return i;
 				}
-				dst.append(strSrc.charAt(i));
+				if(chI == chReplace) {
+					i++;
+					if(i >= size) {
+						return i;
+					}
+					dst.append(strSrc.charAt(i));
+				}
+				else {
+					dst.append(chI);
+				}
 			}
-			else {
-				dst.append(chI);
-			}
+		} catch(Exception e) {
+			throw new RuntimeException(e);
 		}
 		return i;
 	}

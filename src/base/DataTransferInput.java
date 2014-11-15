@@ -115,7 +115,7 @@ public interface DataTransferInput extends Closeable {
 
 	/** Peek at the next block of this input stream without reading it.
 	 * This call reads the next data block and returns it, however
-	 * the next call to {@link #readNextBlock()} or equivalent parameterized
+	 * the next call to {@link #readNext()} or equivalent parameterized
 	 * version will return this peek header.<br/>
 	 * The purpose of this method is to parse arbitrary objects from an input
 	 * stream by peeking at the next element in the stream and call
@@ -155,7 +155,7 @@ public interface DataTransferInput extends Closeable {
 
 
 	/** Returns the last parsed element.
-	 * This method will return a new element once {@link #readNextBlock()} or
+	 * This method will return a new element once {@link #readNext()} or
 	 * an equivalent method is called.
 	 * @return the last read element
 	 */

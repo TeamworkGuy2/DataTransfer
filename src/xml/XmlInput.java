@@ -110,7 +110,7 @@ public interface XmlInput extends DataTransferInput, Closeable {
 	/**
 	 * @return the name of the last element read from this input stream.<br/>
 	 * This only applies to elements, not blocks, block header names can be
-	 * obtained by calling {@link #getCurrentBlockHeader()}
+	 * obtained by calling {@link #getCurrentElement()}
 	 */
 	public String getCurrentElementName();
 

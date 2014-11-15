@@ -233,7 +233,6 @@ public class XmlOutputWriter implements XmlOutput, Closeable {
 
 	/** Write an opening XML tag and add a corresponding closing XML tag to the tag stack
 	 * @param name the name of the XML tag to write
-	 * @param descriptor an optional descriptor to write with the XML tag
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
 	@Override
@@ -252,8 +251,8 @@ public class XmlOutputWriter implements XmlOutput, Closeable {
 
 	/** Write an opening XML tag and add a corresponding closing XML tag to the tag stack
 	 * @param name the name of the XML tag to write
-	 * @param descriptor an optional descriptor to write with the XML opening
-	 * tag, or null to write a generic XML tag
+	 * @param attributes a list of attributes to write with the XML opening tag,
+	 * or null to write a generic XML tag
 	 * @throws IOException if there is an IO error writing to the output stream
 	 */
 	@Override
