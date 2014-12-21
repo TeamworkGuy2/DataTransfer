@@ -2,6 +2,7 @@ package examples;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,6 +26,13 @@ public class Widget implements DataTransferable {
 		this.name = name;
 		this.id = id;
 		Collections.addAll(this.subObjs, subWidgets);
+	}
+
+
+	public Widget(String name, int id, Collection<SubWidget> subWidgets) {
+		this.name = name;
+		this.id = id;
+		this.subObjs.addAll(subWidgets);
 	}
 
 

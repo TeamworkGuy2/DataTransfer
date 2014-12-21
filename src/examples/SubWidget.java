@@ -1,7 +1,10 @@
 package examples;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import base.DataTransferFactory;
 import base.DataTransferInput;
@@ -14,28 +17,52 @@ import base.DataTransferableFactory;
  * @since 2014-9-28
  */
 public class SubWidget implements DataTransferable {
-	private String[] arguments;
+	private List<String> arguments;
+	private List<String> argumentsIm;
 	private String description;
 
 
 	public SubWidget() {
+		setArguments(new String[0]);
 	}
 
 
 	public SubWidget(String[] arguments, String description) {
 		super();
-		this.arguments = arguments;
 		this.description = description;
+		setArguments(arguments);
 	}
 
 
-	public String[] getArguments() {
-		return arguments;
+	public SubWidget(Collection<String> arguments, String description) {
+		super();
+		this.description = description;
+		setArguments(arguments);
+	}
+
+
+	public List<String> getArguments() {
+		return argumentsIm;
 	}
 
 
 	public void setArguments(String[] arguments) {
-		this.arguments = arguments;
+		if(this.arguments == null) {
+			this.arguments = new ArrayList<>();
+			this.argumentsIm = Collections.unmodifiableList(this.arguments);
+		}
+		this.arguments.clear();
+		Collections.addAll(this.arguments, arguments);
+	}
+
+
+	public void setArguments(Collection<String> arguments) {
+		if(this.arguments == null) {
+			this.arguments = new ArrayList<>();
+			this.argumentsIm = Collections.unmodifiableList(this.arguments);
+		}
+		this.arguments.clear();
+		this.arguments.addAll(arguments);
 	}
 
 
@@ -52,7 +79,7 @@ public class SubWidget implements DataTransferable {
 	@Override
 	public void readData(DataTransferInput in) throws IOException {
 		in.readStartBlock("SubWidget");
-		arguments = DataTransferableFactory.readBlock(in, "args", "arg").toArray(new String[0]);
+		setArguments(DataTransferableFactory.readBlock(in, "args", "arg").toArray(new String[0]));
 		description = in.readString("description");
 		in.readEndBlock();
 	}
@@ -61,7 +88,7 @@ public class SubWidget implements DataTransferable {
 	@Override
 	public void writeData(DataTransferOutput out) throws IOException {
 		out.writeStartBlock("SubWidget");
-		DataTransferableFactory.writeBlock(out, "args", "arg", Arrays.asList(this.arguments));
+		DataTransferableFactory.writeBlock(out, "args", "arg", this.argumentsIm);
 		out.writeString("description", this.description != null ? this.description : "");
 		out.writeEndBlock();
 	}
@@ -71,7 +98,7 @@ public class SubWidget implements DataTransferable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Arrays.hashCode(arguments);
+		result = prime * result + arguments.hashCode();
 		result = prime * result + ((description == null) ? 0 : description.hashCode());
 		return result;
 	}
@@ -86,7 +113,7 @@ public class SubWidget implements DataTransferable {
 			return false;
 		}
 		SubWidget other = (SubWidget) obj;
-		if (!Arrays.equals(arguments, other.arguments))
+		if (!this.arguments.equals(other.arguments))
 			return false;
 		if (description == null && other.description != null) {
 			return false;
@@ -99,7 +126,7 @@ public class SubWidget implements DataTransferable {
 
 	@Override
 	public String toString() {
-		return "SubWidget { arguments: " + Arrays.toString(arguments)
+		return "SubWidget { arguments: " + this.arguments.toString()
 				+ ", description: " + description + " }";
 	}
 
@@ -109,7 +136,7 @@ public class SubWidget implements DataTransferable {
 		@Override
 		public void writeData(DataTransferOutput out, SubWidget obj) throws IOException {
 			out.writeStartBlock("SubWidget");
-			DataTransferableFactory.writeBlock(out, "args", "arg", Arrays.asList(obj.arguments));
+			DataTransferableFactory.writeBlock(out, "args", "arg", obj.arguments);
 			out.writeString("description", obj.description != null ? obj.description : "");
 			out.writeEndBlock();
 		}
@@ -118,7 +145,7 @@ public class SubWidget implements DataTransferable {
 		public SubWidget readData(DataTransferInput in) throws IOException {
 			in.readStartBlock("SubWidget");
 			SubWidget obj = new SubWidget();
-			obj.arguments = DataTransferableFactory.readBlock(in, "args", "arg").toArray(new String[0]);
+			obj.setArguments(DataTransferableFactory.readBlock(in, "args", "arg").toArray(new String[0]));
 			obj.description = in.readString("description");
 			in.readEndBlock();
 			return obj;

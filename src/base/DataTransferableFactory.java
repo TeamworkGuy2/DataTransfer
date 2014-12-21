@@ -12,9 +12,10 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import xml.XmlHandler;
 import json.JsonReader;
 import json.JsonWriter;
+import stringUtils.StringConvert;
+import xml.XmlHandler;
 
 /** A set of static functions for creating {@link DataTransferInput} and {@link DataTransferOutput} streams
  * @author TeamworkGuy2
@@ -157,12 +158,12 @@ public class DataTransferableFactory {
 		for(int i = 0, size = ary.size()-1; i < size; i++) {
 			strB.append("\"");
 			// replace \ and " with \\ and \"
-			wrapChar(ary.get(i), '\\', '\\', '"', strB);
+			StringConvert.wrapChar(ary.get(i), '\\', '\\', '"', strB);
 			strB.append("\", ");
 		}
 		if(ary.size() > 0) {
 			strB.append("\"");
-			wrapChar(ary.get(ary.size()-1), '\\', '\\', '"', strB);
+			StringConvert.wrapChar(ary.get(ary.size()-1), '\\', '\\', '"', strB);
 			strB.append("\"]");
 		}
 		else {
@@ -199,7 +200,7 @@ public class DataTransferableFactory {
 						throw new IllegalArgumentException("found starting '\"' at end of read string: '" + src + "'");
 					}
 					// read the array element and set i to the index of the closing quote "
-					i = unwrapChar(src, i, '\\', '"', strDst);
+					i = StringConvert.unwrapChar(src, i, '\\', '"', strDst);
 					if(src.charAt(i) != '"') {
 						throw new IllegalArgumentException("could not find closing '\"'");
 					}
@@ -297,58 +298,6 @@ public class DataTransferableFactory {
 		if(!tag.getName().equals(blockName)) {
 			throw new IOException("incorrect closing block name '" + tag.getName() + "', expected '" + blockName + "'");
 		}
-	}
-
-
-	public static final void wrapChar(String str, char chReplaceBefore, char ch1, char ch2, StringBuilder dst) {
-		for(int i = 0, size = str.length(); i < size; i++) {
-			char chI = str.charAt(i);
-			if(chI == ch1) {
-				dst.append(chReplaceBefore);
-				dst.append(ch1);
-			}
-			else if(chI == ch2) {
-				dst.append(chReplaceBefore);
-				dst.append(ch2);
-			}
-			else {
-				dst.append(chI);
-			}
-		}
-	}
-
-
-	/**
-	 * @param strSrc the source to reach characters from
-	 * @param offset the offset into {@code strSrc} at which to start reading characters
-	 * @param chReplace the char to replace
-	 * @param chEnd stop reading when this char is reached
-	 * @param dst the destination to store the read characters in
-	 * @return the index of the {@code chEnd} that parsing stopped at
-	 */
-	public static final int unwrapChar(CharSequence strSrc, int offset, char chReplace, char chEnd, Appendable dst) {
-		int i = offset;
-		try {
-			for(int size = strSrc.length(); i < size; i++) {
-				char chI = strSrc.charAt(i);
-				if(chI == chEnd) {
-					return i;
-				}
-				if(chI == chReplace) {
-					i++;
-					if(i >= size) {
-						return i;
-					}
-					dst.append(strSrc.charAt(i));
-				}
-				else {
-					dst.append(chI);
-				}
-			}
-		} catch(Exception e) {
-			throw new RuntimeException(e);
-		}
-		return i;
 	}
 
 }

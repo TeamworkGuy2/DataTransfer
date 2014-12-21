@@ -20,6 +20,8 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import stringUtils.StringConvert;
+
 /** XML handler that parses an XML file and hands off control to subclasses when certain opening and closing tags are encountered
  * PairList - sometime in 2012, used modified list/map to store object fields and pass them to an reader/writer
  * XmlInput/Output - 2013-2-20, switch to a custom reader/writer interface that allows objects to write whatever.<br/>
@@ -407,38 +409,7 @@ public class XmlHandler {
 	 * @return String with invalid XML characters replaced with XML character codes
 	 */
 	public static String validateElement(String content) {
-		if(content.indexOf("&") == -1 && content.indexOf("'") == -1 && content.indexOf("\"") == -1 &&
-				content.indexOf("<") == -1 && content.indexOf(">") == -1) {
-			return content;
-		}
-		StringBuilder validated = new StringBuilder(content);
-		int index = 0;
-		index = validated.indexOf("&", 0);
-		while(index > -1) {
-			validated.replace(index, index+1, "&amp;");
-			index = validated.indexOf("&", index+1);
-		}
-		index = validated.indexOf("'", 0);
-		while(index > -1) {
-			validated.replace(index, index+1, "&apos;");
-			index = validated.indexOf("'", index+1);
-		}
-		index = validated.indexOf("\"", 0);
-		while(index > -1) {
-			validated.replace(index, index+1, "&quot;");
-			index = validated.indexOf("\"", index+1);
-		}
-		index = validated.indexOf("<", 0);
-		while(index > -1) {
-			validated.replace(index, index+1, "&lt;");
-			index = validated.indexOf("<", index+1);
-		}
-		index = validated.indexOf(">", 0);
-		while(index > -1) {
-			validated.replace(index, index+1, "&gt;");
-			index = validated.indexOf(">", index+1);
-		}
-		return validated.toString();
+		return StringConvert.escapeXml(content);
 	}
 
 
@@ -448,37 +419,7 @@ public class XmlHandler {
 	 * @return String with XML characters replaced with normal characters
 	 */
 	public static String convertElement(String content) {
-		if(content.indexOf("&") == -1) {
-			return content;
-		}
-		StringBuilder converted = new StringBuilder(content);
-		int index = 0;
-		index = converted.indexOf("&amp;", 0);
-		while(index > -1) {
-			converted.replace(index, index+5, "&");
-			index = converted.indexOf("&amp;", index+1);
-		}
-		index = converted.indexOf("&apos;", 0);
-		while(index > -1) {
-			converted.replace(index, index+6, "'");
-			index = converted.indexOf("&apos;", index+1);
-		}
-		index = converted.indexOf("&quot;", 0);
-		while(index > -1) {
-			converted.replace(index, index+6, "\"");
-			index = converted.indexOf("&quot;", index+1);
-		}
-		index = converted.indexOf("&lt;", 0);
-		while(index > -1) {
-			converted.replace(index, index+4, "<");
-			index = converted.indexOf("&lt;", index+1);
-		}
-		index = converted.indexOf("&gt;", 0);
-		while(index > -1) {
-			converted.replace(index, index+4, ">");
-			index = converted.indexOf("&gt;", index+1);
-		}
-		return converted.toString();
+		return StringConvert.unescapeXml(content);
 	}
 
 }

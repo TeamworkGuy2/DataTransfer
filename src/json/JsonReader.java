@@ -204,7 +204,8 @@ public class JsonReader implements DataTransferInput {
 
 		// read until a field, or beginning/end of an object is reached
 		JsonToken token = jsonIn.getCurrentToken();
-		while(token != null && token != JsonToken.START_OBJECT && token != JsonToken.END_OBJECT && token != JsonToken.FIELD_NAME) {
+		while(token != null && token != JsonToken.START_OBJECT &&
+				token != JsonToken.END_OBJECT && token != JsonToken.FIELD_NAME) {
 			token = jsonIn.nextToken();
 		}
 
@@ -294,7 +295,8 @@ public class JsonReader implements DataTransferInput {
 		boolean result = parsedToken != null && parsedToken == type &&
 				(name == null || (parsedName != null && parsedName.equals(name)));
 		if(!result && type != JsonToken.END_OBJECT) {
-			throw new IllegalStateException("could not find property with name: '" + name + "' of type " + type + ", found '" + parsedName + "' of type " + parsedToken);
+			throw new IllegalStateException("could not find property with name: '" + name +
+					"' of type " + type + ", found '" + parsedName + "' of type " + parsedToken);
 		}
 		// if the token read is a field name, read the field's value
 		currentToken = parsedToken;
@@ -314,7 +316,8 @@ public class JsonReader implements DataTransferInput {
 	}
 
 
-	/** Skip over items from the input stream until the specified element name and types are encountered
+	/** Skip over items from the input stream until the specified element name
+	 * and types are encountered
 	 * @param name the name of the element to search for, if this value is null, the search stops
 	 * at the first element that matches {@code type} or {@code type2}
 	 * @param type one of the element types to search for, null matches the end of the stream
@@ -324,7 +327,8 @@ public class JsonReader implements DataTransferInput {
 	 * @throws IOException if there is an error reading from the input stream
 	 * @throws IllegalStateException if a matching element and name could not be found
 	 */
-	private boolean readUntil(String name, JsonToken type, JsonToken type2, IoType IoType) throws JsonParseException, IOException {
+	private boolean readUntil(String name, JsonToken type, JsonToken type2, IoType IoType)
+			throws JsonParseException, IOException {
 		if(cachedBlock != null) {
 			boolean found = false;
 			if((currentToken != null && (currentToken == type || currentToken == type2)) ||
@@ -349,7 +353,8 @@ public class JsonReader implements DataTransferInput {
 		boolean result = parsedToken != null && (parsedToken == type || parsedToken == type2) &&
 				(name == null || (parsedName != null && parsedName.equals(name)));
 		if(!result) {
-			throw new IllegalStateException("could not find property with name: '" + name + "' of type " + type + " or " + type2);
+			throw new IllegalStateException("could not find property with name: '" + name +
+					"' of type " + type + " or " + type2);
 		}
 		// if the token read is a field name, read the field's value
 		currentToken = parsedToken;
@@ -427,7 +432,8 @@ public class JsonReader implements DataTransferInput {
 	}
 
 
-	/** Based on a {@link JsonToken} type, parse a value from {@link #jsonIn} and store it into this object's
+	/** Based on a {@link JsonToken} type, parse a value from {@link #jsonIn} and
+	 * store it into this object's
 	 * current fields, such as {@link #curBytes}, {@link #curFloat}, etc.
 	 * @param token type type of Json parser token to read an associated data type for
 	 * @throws IOException if there is an error reading from the {@link JsonParser}

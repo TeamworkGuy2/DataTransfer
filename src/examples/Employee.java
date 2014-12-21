@@ -33,16 +33,16 @@ public class Employee implements DataTransferable {
 			return false;
 		}
 		Employee empl = (Employee) obj;
-		boolean r1 = id == empl.id;
-		boolean r2 = name.equals(empl.name);
-		boolean r3 = permanent == empl.permanent;
-		boolean r4 = address.equals(empl.address);
-		boolean r5 = Arrays.equals(phoneNumbers, empl.phoneNumbers);
-		boolean r6 = role.equals(empl.role);
-		boolean r7 = Arrays.equals(cities.toArray(), empl.cities.toArray());
-		boolean r8 = properties.equals(empl.properties);
-		return r1 && r2 && r3 && r4 && r5 && r6 && r7 && r8;
+		return id == empl.id &&
+				name.equals(empl.name) &&
+				permanent == empl.permanent &&
+				address.equals(empl.address) &&
+				Arrays.equals(phoneNumbers, empl.phoneNumbers) &&
+				role.equals(empl.role) &&
+				Arrays.equals(cities.toArray(), empl.cities.toArray()) &&
+				properties.equals(empl.properties);
 	}
+
 
 	public String dif(Employee empl) {
 		String str = id == empl.id ? "" : "id: " + id + "!=" + empl.id + ", ";
@@ -58,6 +58,7 @@ public class Employee implements DataTransferable {
 		return str;
 	}
 
+
 	@Override
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
@@ -72,6 +73,7 @@ public class Employee implements DataTransferable {
 		sb.append("properties: " + properties + " }\n");
 		return sb.toString();
 	}
+
 
 	@Override
 	public void readData(DataTransferInput in) throws IOException {
@@ -104,6 +106,7 @@ public class Employee implements DataTransferable {
 		}
 		in.readEndBlock();
 	}
+
 
 	@Override
 	public void writeData(DataTransferOutput out) throws IOException {

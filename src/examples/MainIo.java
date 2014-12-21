@@ -14,11 +14,11 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 
+import org.xml.sax.SAXException;
+
+import stringUtils.StringConvert;
 import base.DataElement;
 import base.DataTransferInput;
-import base.DataTransferOutput;
-import base.DataTransferableFactory;
-import base.DataTransferableFormat;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -81,9 +81,9 @@ public class MainIo {
 		StringBuilder dst = new StringBuilder();
 		for(String str : strs) {
 			System.out.println("str : " + str);
-			DataTransferableFactory.wrapChar(str, '\\', '\\', '"', src);
+			StringConvert.wrapChar(str, '\\', '\\', '"', src);
 			System.out.println("wrap: " + src.toString());
-			DataTransferableFactory.unwrapChar(src, 0, '\\', '"', dst);
+			StringConvert.unwrapChar(src, 0, '\\', '"', dst);
 			System.out.println("unwp: " + dst.toString());
 			src.setLength(0);
 			dst.setLength(0);
@@ -114,68 +114,6 @@ public class MainIo {
 
 
 	public static void main(String[] args) throws IOException {
-		String src = "a \\\"block\\\" char '\\\"'";
-		StringBuilder strDst = new StringBuilder();
-		System.out.println(DataTransferableFactory.unwrapChar(src, 0, '\\', '"', strDst) + ": " + strDst.toString());
-		//com.sun.org.apache.xerces.internal.impl.XMLStreamReaderImpl;
-		Charset charset = Charset.forName("UTF-8");
-		DataTransferableFormat format = DataTransferableFormat.XML;
-		String formatName = format.name().toLowerCase();
-		String fileName = formatName + "_test." + formatName;
-		File file = new File(fileName);
-
-		//JsonTest test = new JsonTest(file, charset);
-		ReadWriteTest.writeFile(format, file);
-		System.out.println("successfully wrote " + format + " data to " + file);
-		ReadWriteTest.readFile(format, file);
-		System.out.println("successfully read " + format + " data to " + file);
-
-		File employeeFile = new File("stream_emp.txt");
-
-		Employee emplOut = Employee.createEmployee();
-		DataTransferOutput out = DataTransferableFactory.createWriter(format, employeeFile, true);
-		emplOut.writeData(out);
-		out.close();
-
-		DataTransferInput in = DataTransferableFactory.createReader(format, employeeFile, true);
-		Employee emplIn = new Employee();
-		emplIn.readData(in);
-		in.close();
-
-		System.out.println("Employee write equal read: " + emplIn.equals(emplOut));
-
-
-		File widgetFile = new File("widget." + formatName);
-
-		// The object to write
-		Widget w = new Widget("Alpha", 42, new SubWidget[] {
-				new SubWidget(new String[] {"A", "02", "C"}, "first sub widget"),
-				new SubWidget(new String[] {"04", "E"}, "special 2 item sub widget"),
-				new SubWidget(new String[] {"06", "G", "G6"}, null),
-				new SubWidget(new String[] {}, ""),
-			});
-		// Create a file output stream for the XML output
-		// Create an XML output writer and convert it to data output writer
-		out = DataTransferableFactory.createWriter(format, new FileOutputStream(widgetFile), charset);
-		// Write the object
-		w.writeData(out);
-		out.close();
-
-		// The object to read from the file
-		Widget copy = new Widget();
-
-		System.out.println("Copy empty:\t " + copy);
-
-		// Create the file input reader for the XML input
-		// Create the XML input reader and convert it to a data input reader
-		in = DataTransferableFactory.createReader(format, new FileInputStream(widgetFile), charset);
-		// Read the object
-		copy.readData(in);
-		in.close();
-
-		System.out.println("Widget write equal read: " + (w.equals(copy)));
-		System.out.println("Original:    " + w);
-		System.out.println("Copy parsed: " + w);
 	}
 
 }
