@@ -2,12 +2,9 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-	<classpathentry kind="lib" path="C:/Users/TeamworkGuy2/Documents/Java/Libraries/jackson/jar/jackson-core.jar" sourcepath="C:/Users/TeamworkGuy2/Documents/Java/Libraries/jackson/src">
-		<attributes>
-			<attribute name="javadoc_location" value="file:/C:/Users/TeamworkGuy2/Documents/Java/Libraries/jackson/doc/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/TeamworkGuy2/Documents/Java/Libraries/data-util/jar/data_util.jar" sourcepath="/DataUtility/src"/>
+	<classpathentry kind="lib" path="C:/Users/TeamworkGuy2/Documents/Java/Libraries/jackson/jar/jackson-core-2.5.0.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="lib" path="C:/Users/TeamworkGuy2/Documents/Java/Libraries/jtext-util/jar/jtext_util.jar"/>
+	<classpathentry kind="lib" path="C:/Users/TeamworkGuy2/Documents/Java/Libraries/jsimple-types/jar/jsimple_types.jar" sourcepath="/JSimpleTypes/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
