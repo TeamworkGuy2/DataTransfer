@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import twg2.io.serialize.base.DataElement;
-import twg2.io.serialize.base.DataTransferableFactory;
 import twg2.io.serialize.base.DataTransferFormat;
+import twg2.io.serialize.base.DataTransferableFactory;
 import twg2.io.serialize.base.reader.DataTransferInput;
 import twg2.io.serialize.base.writer.DataTransferOutput;
 

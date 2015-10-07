@@ -20,7 +20,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import stringUtils.StringConvert;
+import twg2.text.stringUtils.StringEscape;
 
 /** XML handler that parses an XML file and hands off control to subclasses when certain opening and closing tags are encountered
  * PairList - sometime in 2012, used modified list/map to store object fields and pass them to an reader/writer
@@ -407,7 +407,7 @@ public class XmlHandler {
 	 * @return String with invalid XML characters replaced with XML character codes
 	 */
 	public static String validateElement(String content) {
-		return StringConvert.escapeXml(content);
+		return StringEscape.escapeXml(content);
 	}
 
 
@@ -417,7 +417,7 @@ public class XmlHandler {
 	 * @return String with XML characters replaced with normal characters
 	 */
 	public static String convertElement(String content) {
-		return StringConvert.unescapeXml(content);
+		return StringEscape.unescapeXml(content);
 	}
 
 }

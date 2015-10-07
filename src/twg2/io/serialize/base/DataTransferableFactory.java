@@ -12,13 +12,13 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import stringUtils.StringConvert;
 import twg2.io.serialize.base.reader.DataTransferInput;
 import twg2.io.serialize.base.writer.DataTransferOutput;
 import twg2.io.serialize.base.writer.WritableObject;
 import twg2.io.serialize.json.JsonReader;
 import twg2.io.serialize.json.JsonWriter;
 import twg2.io.serialize.xml.XmlHandler;
+import twg2.text.stringUtils.StringEscape;
 
 /** A set of static functions for creating {@link DataTransferInput} and {@link DataTransferOutput} streams
  * @author TeamworkGuy2
@@ -161,12 +161,12 @@ public class DataTransferableFactory {
 		for(int i = 0, size = ary.size()-1; i < size; i++) {
 			strB.append("\"");
 			// replace \ and " with \\ and \"
-			StringConvert.escapeChar(ary.get(i), '\\', '\\', '"', strB);
+			StringEscape.escapeChar(ary.get(i), '\\', '\\', '"', strB);
 			strB.append("\", ");
 		}
 		if(ary.size() > 0) {
 			strB.append("\"");
-			StringConvert.escapeChar(ary.get(ary.size()-1), '\\', '\\', '"', strB);
+			StringEscape.escapeChar(ary.get(ary.size()-1), '\\', '\\', '"', strB);
 			strB.append("\"]");
 		}
 		else {
@@ -203,7 +203,7 @@ public class DataTransferableFactory {
 						throw new IllegalArgumentException("found starting '\"' at end of read string: '" + src + "'");
 					}
 					// read the array element and set i to the index of the closing quote "
-					i = StringConvert.unescapeChar(src, i, '\\', '"', strDst);
+					i = StringEscape.unescapeChar(src, i, '\\', '"', strDst);
 					if(src.charAt(i) != '"') {
 						throw new IllegalArgumentException("could not find closing '\"'");
 					}

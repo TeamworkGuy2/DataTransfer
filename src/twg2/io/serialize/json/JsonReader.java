@@ -16,7 +16,7 @@ import twg2.io.serialize.base.DataElementImpl;
 import twg2.io.serialize.base.DataProxy;
 import twg2.io.serialize.base.ParsedElementType;
 import twg2.io.serialize.base.reader.DataTransferInput;
-import typeInfo.IoType;
+import twg2.primitiveIoTypes.IoType;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;

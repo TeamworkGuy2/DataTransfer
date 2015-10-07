@@ -14,11 +14,11 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 
-import stringUtils.StringConvert;
 import twg2.io.serialize.base.DataElement;
-import twg2.io.serialize.base.DataTransferableFactory;
 import twg2.io.serialize.base.DataTransferFormat;
+import twg2.io.serialize.base.DataTransferableFactory;
 import twg2.io.serialize.base.reader.DataTransferInput;
+import twg2.text.stringUtils.StringEscape;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -80,9 +80,9 @@ public class MainIo {
 		StringBuilder dst = new StringBuilder();
 		for(String str : strs) {
 			System.out.println("str : " + str);
-			StringConvert.escapeChar(str, '\\', '\\', '"', src);
+			StringEscape.escapeChar(str, '\\', '\\', '"', src);
 			System.out.println("wrap: " + src.toString());
-			StringConvert.unescapeChar(src, 0, '\\', '"', dst);
+			StringEscape.unescapeChar(src, 0, '\\', '"', dst);
 			System.out.println("unwp: " + dst.toString());
 			src.setLength(0);
 			dst.setLength(0);

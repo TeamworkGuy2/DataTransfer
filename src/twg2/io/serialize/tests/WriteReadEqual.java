@@ -9,8 +9,8 @@ import java.nio.charset.Charset;
 import org.junit.Assert;
 import org.junit.Test;
 
-import twg2.io.serialize.base.DataTransferableFactory;
 import twg2.io.serialize.base.DataTransferFormat;
+import twg2.io.serialize.base.DataTransferableFactory;
 import twg2.io.serialize.base.reader.DataTransferInput;
 import twg2.io.serialize.base.writer.DataTransferOutput;
 import twg2.io.serialize.examples.Employee;

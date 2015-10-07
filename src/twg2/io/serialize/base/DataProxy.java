@@ -2,7 +2,7 @@ package twg2.io.serialize.base;
 
 import java.util.Arrays;
 
-import typeInfo.PrimitiveOrString;
+import twg2.primitiveIoTypes.PrimitiveOrString;
 
 /**
  * @author TeamworkGuy2
