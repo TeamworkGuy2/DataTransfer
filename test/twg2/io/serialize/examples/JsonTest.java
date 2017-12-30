@@ -33,12 +33,11 @@ public class JsonTest {
 
 
 	public static void main(String[] args) throws IOException {
-		File file = new File("stream_emp.txt");
+		File file = new File("rsc/stream_employee.json");
 		Charset charset = Charset.forName("UTF-8");
 		Employee emp = Employee.createEmployee();
 
-		JsonGenerator jsonGenerator = new JsonFactory()
-		.createGenerator(new FileOutputStream(file));
+		JsonGenerator jsonGenerator = new JsonFactory().createGenerator(new FileOutputStream(file));
 		//for pretty printing
 		jsonGenerator.setPrettyPrinter(new DefaultPrettyPrinter());
 

@@ -1,0 +1,19 @@
+<Employee>
+	<id>22</id>
+	<name>No One</name>
+	<permanent>true</permanent>
+	<address>Street-Name, City, 01234</address>
+	<phoneNumbers>1111111111,2222222222,9999999999</phoneNumbers>
+	<role>designer</role>
+	<cities>
+		<city>City A</city>
+		<city>City 2</city>
+		<city>City C</city>
+	</cities>
+	<properties>
+		<gender>male</gender>
+		<dob>1984-6-8</dob>
+		<hasHair>true</hasHair>
+		<overweight>true</overweight>
+	</properties>
+</Employee>

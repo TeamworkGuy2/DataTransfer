@@ -20,7 +20,7 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import twg2.text.stringUtils.StringEscape;
+import twg2.text.stringEscape.StringEscapeXml;
 
 /** XML handler that parses an XML file and hands off control to subclasses when certain opening and closing tags are encountered
  * PairList - sometime in 2012, used modified list/map to store object fields and pass them to an reader/writer
@@ -95,7 +95,7 @@ public class XmlHandler {
 	 */
 	static final synchronized XMLInputFactory getXMLFactory() {
 		if(factory == null) {
-			factory = XMLInputFactory.newFactory();
+			factory = XMLInputFactory.newInstance();
 		}
 		return factory;
 	}
@@ -150,8 +150,7 @@ public class XmlHandler {
 	private static void readXMLObjectsInternal(InputStream input, boolean doBuffer, boolean close, Charset charset,
 			String xmlTag, String descriptor, Xmlable[] xmlObjects, boolean aggressiveParsing, boolean throwsNoTagException) throws Exception {
 		XmlInput in = createXMLReader(input, doBuffer, charset, aggressiveParsing, throwsNoTagException);
-		XMLInputFactory xmlFactory = getXMLFactory();
-		XMLStreamReader reader = xmlFactory.createXMLStreamReader(input, defaultCharset.name());
+		XMLStreamReader reader = getXMLFactory().createXMLStreamReader(input, defaultCharset.name());
 		in = new XmlInputReader(reader, aggressiveParsing, throwsNoTagException);
 
 		in.readStartBlock(xmlTag);
@@ -245,22 +244,18 @@ public class XmlHandler {
 	 */
 	public static XmlInput createXMLReader(InputStream input, boolean doBuffer, Charset charset,
 			boolean aggressiveParsing, boolean throwsNoTagException) throws IOException {
-		XmlInput in = null;
 		if(charset == null) {
 			charset = defaultCharset;
 		}
-		XMLInputFactory xmlFactory = getXMLFactory();
-		XMLStreamReader reader = null;
 		if(doBuffer == true && !(input instanceof BufferedInputStream)) {
 			input = new BufferedInputStream(input);
 		}
 		try {
-			reader = xmlFactory.createXMLStreamReader(input, charset.name());
+			XMLStreamReader reader = getXMLFactory().createXMLStreamReader(input, charset.name());
+			return new XmlInputReader(reader, aggressiveParsing, throwsNoTagException);
 		} catch (XMLStreamException e) {
 			throw new IOException(e);
 		}
-		in = new XmlInputReader(reader, aggressiveParsing, throwsNoTagException);
-		return in;
 	}
 
 
@@ -278,19 +273,15 @@ public class XmlHandler {
 	 */
 	public static XmlInput createXMLReader(Reader reader, boolean doBuffer, boolean aggressiveParsing,
 			boolean throwsNoTagException) throws IOException {
-		XmlInput in = null;
-		XMLInputFactory xmlFactory = getXMLFactory();
-		XMLStreamReader xmlReader = null;
 		if(doBuffer == true && !(reader instanceof BufferedReader)) {
 			reader = new BufferedReader(reader);
 		}
 		try {
-			xmlReader = xmlFactory.createXMLStreamReader(reader);
+			XMLStreamReader xmlReader = getXMLFactory().createXMLStreamReader(reader);
+			return new XmlInputReader(xmlReader, aggressiveParsing, throwsNoTagException);
 		} catch (XMLStreamException e) {
 			throw new IOException(e);
 		}
-		in = new XmlInputReader(xmlReader, aggressiveParsing, throwsNoTagException);
-		return in;
 	}
 
 
@@ -302,16 +293,14 @@ public class XmlHandler {
 	 * @return the XML output stream created from the output stream
 	 */
 	public static XmlOutput createXMLWriter(OutputStream output, boolean doBuffer, Charset charset) {
-		XmlOutput out = null;
 		if(charset == null) {
 			charset = defaultCharset;
 		}
 		Writer writer = new OutputStreamWriter(output, charset);
-		if(doBuffer == true && !(out instanceof BufferedOutputStream)) {
+		if(doBuffer == true && !(output instanceof BufferedOutputStream)) {
 			writer = new BufferedWriter(writer);
 		}
-		out = new XmlOutputWriter(writer, charset);
-		return out;
+		return new XmlOutputWriter(writer, charset);
 	}
 
 
@@ -323,15 +312,13 @@ public class XmlHandler {
 	 * @return the XML output stream created from the output stream
 	 */
 	public static XmlOutput createXMLWriter(Writer writer, boolean doBuffer, Charset charset) {
-		XmlOutput out = null;
 		if(charset == null) {
 			charset = defaultCharset;
 		}
 		if(doBuffer == true && !(writer instanceof BufferedWriter)) {
 			writer = new BufferedWriter(writer);
 		}
-		out = new XmlOutputWriter(writer, charset);
-		return out;
+		return new XmlOutputWriter(writer, charset);
 	}
 
 
@@ -407,7 +394,7 @@ public class XmlHandler {
 	 * @return String with invalid XML characters replaced with XML character codes
 	 */
 	public static String validateElement(String content) {
-		return StringEscape.escapeXml(content);
+		return StringEscapeXml.escapeXml(content);
 	}
 
 
@@ -417,7 +404,7 @@ public class XmlHandler {
 	 * @return String with XML characters replaced with normal characters
 	 */
 	public static String convertElement(String content) {
-		return StringEscape.unescapeXml(content);
+		return StringEscapeXml.unescapeXml(content);
 	}
 
 }

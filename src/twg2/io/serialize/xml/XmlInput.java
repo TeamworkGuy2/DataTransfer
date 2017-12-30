@@ -4,6 +4,7 @@ import java.io.Closeable;
 import java.io.DataInput;
 import java.io.IOException;
 
+import twg2.io.serialize.base.DataElement;
 import twg2.io.serialize.base.reader.DataTransferInput;
 
 /** XML data input stream interface that mirrors the methods of a {@link DataInput} stream.
@@ -98,7 +99,7 @@ public interface XmlInput extends DataTransferInput, Closeable {
 	 * @return the last read opening XML tag
 	 */
 	@Override
-	public XmlTag getCurrentElement();
+	public DataElement getCurrentElement();
 
 
 	/** Get the group of attributes associated with the last read element or tag.

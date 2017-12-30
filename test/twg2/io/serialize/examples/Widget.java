@@ -71,15 +71,30 @@ public class Widget implements DataTransferable {
 
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + id;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + ((subObjs == null) ? 0 : subObjs.hashCode());
+		result = prime * result + ((type == null) ? 0 : type.hashCode());
+		return result;
+	}
+
+
+	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof Widget)) {
 			return false;
 		}
 		Widget w = (Widget)obj;
-		boolean result = this.id == w.id && this.name.equals(w.name) && this.type.equals(w.type);
-		if(this.subObjs.size() != w.subObjs.size()) {
+		if(this.id != w.id ||
+				!this.name.equals(w.name) ||
+				!this.type.equals(w.type) ||
+				this.subObjs.size() != w.subObjs.size()) {
 			return false;
 		}
+		boolean result =  true;
 		for(int i = 0, len = this.subObjs.size(); i < len; i++) {
 			result &= this.subObjs.get(i).equals(w.subObjs.get(i));
 			if(result == false) {

@@ -18,7 +18,7 @@ import twg2.io.serialize.base.DataElement;
 import twg2.io.serialize.base.DataTransferFormat;
 import twg2.io.serialize.base.DataTransferableFactory;
 import twg2.io.serialize.base.reader.DataTransferInput;
-import twg2.text.stringUtils.StringEscape;
+import twg2.text.stringEscape.StringEscape;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -113,7 +113,8 @@ public class MainIo {
 
 
 	public static void main(String[] args) throws IOException {
-		printEvents(DataTransferableFactory.createReader(DataTransferFormat.JSON, new File("widget.json"), true));
+		File file = new File("rsc/widget.json");
+		printEvents(DataTransferableFactory.createReader(DataTransferFormat.JSON, file, true));
 	}
 
 }

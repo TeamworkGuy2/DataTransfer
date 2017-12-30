@@ -11,17 +11,18 @@ import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+
 import twg2.io.serialize.base.DataElement;
 import twg2.io.serialize.base.DataElementImpl;
 import twg2.io.serialize.base.DataProxy;
 import twg2.io.serialize.base.ParsedElementType;
 import twg2.io.serialize.base.reader.DataTransferInput;
-import twg2.primitiveIoTypes.IoType;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
+import twg2.simpleTypes.ioPrimitives.IoType;
+import twg2.simpleTypes.ioPrimitives.PrimitiveOrString;
 
 /** A {@code DataTransferInput} wrapper for a JSON formated input stream
  * @author TeamworkGuy2
@@ -29,8 +30,6 @@ import com.fasterxml.jackson.core.JsonToken;
  */
 public class JsonReader implements DataTransferInput {
 	private JsonParser jsonIn;
-	private int inObject;
-	private int inArray;
 	private JsonToken currentToken;
 	private JsonToken currentValueToken;
 	private String currentName;
@@ -102,6 +101,7 @@ public class JsonReader implements DataTransferInput {
 
 	@Override
 	public void read(String name, byte[] b, int off, int len) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.VALUE_STRING, IoType.BINARY);
 		System.arraycopy(curData.getByteArray(), 0, b, off, len);
 	}
@@ -109,6 +109,7 @@ public class JsonReader implements DataTransferInput {
 
 	@Override
 	public boolean readBoolean(String name) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.VALUE_TRUE, JsonToken.VALUE_FALSE, IoType.BOOLEAN);
 		return curData.getBoolean();
 	}
@@ -116,6 +117,7 @@ public class JsonReader implements DataTransferInput {
 
 	// TODO implement in parent interface
 	public boolean[] readBooleanArray(String name) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.VALUE_TRUE, JsonToken.VALUE_FALSE, IoType.BOOLEAN);
 		return curData.getBooleanArray();
 	}
@@ -123,12 +125,14 @@ public class JsonReader implements DataTransferInput {
 
 	// TODO implement in parent interface
 	public void readBooleanArray(String name, boolean[] dst, int dstOff) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.VALUE_TRUE, JsonToken.VALUE_FALSE, IoType.BOOLEAN);
 	}
 
 
 	@Override
 	public byte readByte(String name) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.VALUE_NUMBER_INT, IoType.BYTE);
 		return curData.getByte();
 	}
@@ -136,6 +140,7 @@ public class JsonReader implements DataTransferInput {
 
 	@Override
 	public char readChar(String name) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.VALUE_STRING, IoType.CHAR);
 		if(jsonIn.getTextLength() < 1) {
 			throw new IllegalStateException("Could not read one character, string length " + jsonIn.getTextLength());
@@ -146,6 +151,7 @@ public class JsonReader implements DataTransferInput {
 
 	@Override
 	public double readDouble(String name) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.VALUE_NUMBER_FLOAT, IoType.DOUBLE);
 		return curData.getDouble();
 	}
@@ -153,6 +159,7 @@ public class JsonReader implements DataTransferInput {
 
 	@Override
 	public float readFloat(String name) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.VALUE_NUMBER_FLOAT, IoType.FLOAT);
 		return curData.getFloat();
 	}
@@ -160,6 +167,7 @@ public class JsonReader implements DataTransferInput {
 
 	@Override
 	public int readInt(String name) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.VALUE_NUMBER_INT, IoType.INT);
 		return curData.getInt();
 	}
@@ -167,6 +175,7 @@ public class JsonReader implements DataTransferInput {
 
 	@Override
 	public long readLong(String name) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.VALUE_NUMBER_INT, IoType.LONG);
 		return curData.getLong();
 	}
@@ -174,6 +183,7 @@ public class JsonReader implements DataTransferInput {
 
 	@Override
 	public short readShort(String name) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.VALUE_NUMBER_INT, IoType.SHORT);
 		return curData.getShort();
 	}
@@ -181,6 +191,7 @@ public class JsonReader implements DataTransferInput {
 
 	@Override
 	public String readString(String name) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.VALUE_STRING, IoType.STRING);
 		return curData.getString();
 	}
@@ -239,8 +250,8 @@ public class JsonReader implements DataTransferInput {
 
 	@Override
 	public DataElement readStartBlock(String name) throws IOException {
+		@SuppressWarnings("unused")
 		boolean result = readUntil(name, JsonToken.START_OBJECT, null);
-		//lastBlock = currentBlock;
 		currentBlock = new DataElementImpl(currentName, 0, null, ParsedElementType.HEADER);
 		return currentBlock;
 	}
@@ -327,7 +338,7 @@ public class JsonReader implements DataTransferInput {
 		}
 		currentContent = jsonIn.getText();
 		if(ioType != null) {
-			parseContent(name, ioType);
+			parseContent(name, ioType, jsonIn, curData, false);
 		}
 		// if it is an element, the previous nextToken() call moved to the element value, this call moves to the next token
 		jsonIn.nextToken();
@@ -347,9 +358,13 @@ public class JsonReader implements DataTransferInput {
 	}
 
 
+	// TODO implement primitive array reading in future
+
+	@SuppressWarnings("unused")
 	private String[] readArray() throws JsonParseException, IOException {
-		JsonToken token = jsonIn.getCurrentToken();
 		ArrayList<String> values = new ArrayList<>();
+
+		JsonToken token = jsonIn.getCurrentToken();
 		while(token != null && token != JsonToken.END_ARRAY) {
 			values.add(jsonIn.getValueAsString());
 			token = jsonIn.nextToken();
@@ -362,18 +377,24 @@ public class JsonReader implements DataTransferInput {
 	}
 
 
-	private String[] readArrayOfType(IoType type) throws JsonParseException, IOException {
+	@SuppressWarnings("unused")
+	private DataProxy readArrayOfType(IoType type) throws JsonParseException, IOException {
+		PrimitiveOrString pType = PrimitiveOrString.tryFromIoType(type);
+		if(pType == null) {
+			throw new IllegalArgumentException("Cannot read a " + type + " array, must be convertable to " + PrimitiveOrString.class);
+		}
+		DataProxy elemData = new DataProxy(pType, true);
+
 		JsonToken token = jsonIn.getCurrentToken();
-		ArrayList<String> values = new ArrayList<>();
 		while(token != null && token != JsonToken.END_ARRAY) {
-			values.add(jsonIn.getValueAsString());
+			parseContent(null, type, jsonIn, elemData, true);
 			token = jsonIn.nextToken();
 		}
 		currentToken = token;
 		currentName = jsonIn.getCurrentName();
 		currentContent = jsonIn.getText();
 		jsonIn.nextToken();
-		return values.toArray(new String[values.size()]);
+		return elemData;
 	}
 
 
@@ -382,47 +403,57 @@ public class JsonReader implements DataTransferInput {
 	 * @param type the data type to read
 	 * @throws IOException if there is an error reading from the {@link JsonParser}
 	 */
-	private void parseContent(String name, IoType type) throws IOException {
+	private static void parseContent(String name, IoType type, JsonParser jsonSrc, DataProxy dst, boolean addToArray) throws IOException {
 		switch(type) {
 		case BINARY:
-			byte[] bytes = jsonIn.getCurrentToken().asByteArray();
-			curData.setByteArray(name, bytes, 0, bytes.length);
+			byte[] bytes = jsonSrc.getCurrentToken().asByteArray();
+			if(addToArray) throw new IllegalArgumentException("Cannot handle IoType.BINARY data when 'addToArray' is true");
+			else dst.setByteArray(name, bytes, 0, bytes.length);
 			return;
 		case BOOLEAN:
-			boolean boolVal = jsonIn.getBooleanValue();
-			curData.setBoolean(name, boolVal);
+			boolean boolVal = jsonSrc.getBooleanValue();
+			if(addToArray) dst.addBooleanToArray(boolVal);
+			else dst.setBoolean(name, boolVal);
 			return;
 		case BYTE:
-			byte byteVal = jsonIn.getByteValue();
-			curData.setByte(name, byteVal);
+			byte byteVal = jsonSrc.getByteValue();
+			if(addToArray) dst.addByteToArray(byteVal);
+			else dst.setByte(name, byteVal);
 			return;
 		case CHAR:
-			char charVal = jsonIn.getTextCharacters()[jsonIn.getTextOffset()];
-			curData.setChar(name, charVal);
+			char charVal = jsonSrc.getTextCharacters()[jsonSrc.getTextOffset()];
+			if(addToArray) dst.addCharToArray(charVal);
+			else dst.setChar(name, charVal);
 			return;
 		case DOUBLE:
-			double doubleVal = jsonIn.getDoubleValue();
-			curData.setDouble(name, doubleVal);
+			double doubleVal = jsonSrc.getDoubleValue();
+			if(addToArray) dst.addDoubleToArray(doubleVal);
+			else dst.setDouble(name, doubleVal);
 			return;
 		case FLOAT:
-			float floatVal = jsonIn.getFloatValue();
-			curData.setFloat(name, floatVal);
+			float floatVal = jsonSrc.getFloatValue();
+			if(addToArray) dst.addFloatToArray(floatVal);
+			else dst.setFloat(name, floatVal);
 			return;
 		case INT:
-			int intVal = jsonIn.getIntValue();
-			curData.setInt(name, intVal);
+			int intVal = jsonSrc.getIntValue();
+			if(addToArray) dst.addIntToArray(intVal);
+			else dst.setInt(name, intVal);
 			return;
 		case LONG:
-			long longVal = jsonIn.getLongValue();
-			curData.setLong(name, longVal);
+			long longVal = jsonSrc.getLongValue();
+			if(addToArray) dst.addLongToArray(longVal);
+			else dst.setLong(name, longVal);
 			return;
 		case SHORT:
-			short shortVal = jsonIn.getShortValue();
-			curData.setShort(name, shortVal);
+			short shortVal = jsonSrc.getShortValue();
+			if(addToArray) dst.addShortToArray(shortVal);
+			else dst.setShort(name, shortVal);
 			return;
 		case STRING:
-			String stringVal = jsonIn.getText();
-			curData.setString(name, stringVal);
+			String stringVal = jsonSrc.getText();
+			if(addToArray) dst.addStringToArray(stringVal);
+			else dst.setString(name, stringVal);
 			return;
 		default:
 			throw new AssertionError("unknown type: " + type);

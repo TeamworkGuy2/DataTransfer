@@ -1,0 +1,21 @@
+{
+  "Employee" : {
+    "id" : 22,
+    "name" : "No One",
+    "permanent" : true,
+    "address" : "Street-Name, City, 01234",
+    "phoneNumbers" : "1111111111,2222222222,9999999999",
+    "role" : "designer",
+    "cities" : {
+      "city" : "City A",
+      "city" : "City 2",
+      "city" : "City C"
+    },
+    "properties" : {
+      "gender" : "male",
+      "dob" : "1984-6-8",
+      "hasHair" : "true",
+      "overweight" : "true"
+    }
+  }
+}

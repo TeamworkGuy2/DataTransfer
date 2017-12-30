@@ -1,0 +1,25 @@
+{
+  "body" : {
+    "arch" : {
+      "string" : "contents arch 1.1",
+      "vars" : "",
+      "entry" : "contents arch 1.2",
+      "prim" : {
+        "integer" : 256,
+        "float" : 4779.98
+      }
+    },
+    "steps" : true,
+    "setting" : "V<map> upm, ul",
+    "inter" : {
+      "inner" : { },
+      "interEntry" : "inter 1.1"
+    },
+    "loopCount" : 2,
+    "loop" : {
+      "elem" : "element-0",
+      "elem" : "element-1"
+    },
+    "loop2" : "[\"element-2-0\", \"element-2-1\"]"
+  }
+}

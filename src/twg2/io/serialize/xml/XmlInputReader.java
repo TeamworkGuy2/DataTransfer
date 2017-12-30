@@ -10,6 +10,8 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import twg2.io.serialize.base.DataElement;
+import twg2.io.serialize.base.DataElementImpl;
 import twg2.io.serialize.base.ParsedElementType;
 import twg2.io.serialize.base.reader.DataTransferInput;
 
@@ -28,9 +30,9 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 	private boolean parseAhead;
 	@SuppressWarnings("unused")
 	private boolean noTagException;
-	private XmlTag lastOpeningTag;
+	private DataElement lastOpeningTag;
 	private XmlAttributes attributesStack;
-	private XmlTag peekHeader;
+	private DataElement peekHeader;
 	private StringBuilder contentsBldr = new StringBuilder();
 	private String cachedContents = null;
 
@@ -271,14 +273,13 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 
 
 	@Override
-	public XmlTag readNext() throws IOException {
-		XmlTag tag = readStartBlock(true, 0, false, null);
-		return tag;
+	public DataElement readNext() throws IOException {
+		return readStartBlock(true, 0, false, null);
 	}
 
 
 	@Override
-	public XmlTag readStartBlock(String name) throws IOException {
+	public DataElement readStartBlock(String name) throws IOException {
 		return readStartBlock(false, START_EL, true, name);
 	}
 
@@ -287,15 +288,15 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 	 * @param name the name of the opening XML tag to read
 	 * @throws IOException if there is an IO or XML related error while reading from the input stream
 	 */
-	private XmlTag readStartBlock(boolean readFirst, int elemType, boolean matchName, String name) throws IOException {
-		XmlTag xmlTag = null;
+	private DataElement readStartBlock(boolean readFirst, int elemType, boolean matchName, String name) throws IOException {
+		DataElement xmlTag = null;
 		if(peekHeader != null) {
 			xmlTag = peekHeader;
 			peekHeader = null;
 		}
 		else {
 			try {
-				xmlTag = nextElement(xmlReader, readFirst, elemType, matchName, name);
+				xmlTag = nextElement(null, xmlReader, readFirst, elemType, matchName, name);
 				lastOpeningTag = xmlTag;
 			} catch(XMLStreamException e) {
 				throw new IOException(e);
@@ -318,7 +319,7 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 	 */
 	@Override
 	public void readEndBlock() throws IOException {
-		XmlTag xmlTag = null;
+		DataElement xmlTag = null;
 		if(peekHeader != null) {
 			xmlTag = peekHeader;
 			peekHeader = null;
@@ -327,7 +328,7 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 			try {
 				String lastTag = tagStack.get(tagStack.size()-1);
 				do {
-					xmlTag = nextElement(xmlReader, false, END_EL, false, null);
+					xmlTag = nextElement(null, xmlReader, false, END_EL, false, null);
 				} while(xmlTag != null && !lastTag.equals(xmlTag.getName()));
 				lastOpeningTag = xmlTag;
 			} catch(XMLStreamException e) {
@@ -352,21 +353,19 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 	 * @throws IOException if there is a format related error while reading from the to input stream
 	 */
 	@Override
-	public XmlTag peekNext() throws IOException {
+	public DataElement peekNext() throws IOException {
 		// read the next header and store it as the peek header or reuse the current peek header
 		if(peekHeader == null) {
-			// Peek at the next header
-			XmlTag newTag = next(null, true, 0, false, null);
-			peekHeader = newTag;
+			peekHeader = next(null, true, 0, false, null);
 		}
 		// Return the new peek header or the current peek header
 		return peekHeader;
 	}
 
 
-	private XmlTag next(ParsedElementType typeHint, boolean readFirst, int elemType, boolean matchName, String name)
+	private DataElement next(ParsedElementType typeHint, boolean readFirst, int elemType, boolean matchName, String name)
 			throws IOException {
-		XmlTag xmlTag = null;
+		DataElement xmlTag = null;
 		if(peekHeader != null) {
 			xmlTag = peekHeader;
 			peekHeader = null;
@@ -382,10 +381,11 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 	}
 
 
-	/** General purpose method that reads starting blocks, elements, or ending blocks<br>
+	/** Read a starting blocks, elements, or ending blocks.<br>
 	 * TODO: Note: due to ambiguity of empty elements in XML, an empty tag like {@code <element></element>}
 	 * is read as a {@link ParsedElementType#HEADER} and {@link ParsedElementType#FOOTER FOOTER},
 	 * not an {@link ParsedElementType#ELEMENT ELEMENT}. To read an empty element, call {@link #readString()}
+	 * @param typeHint optional hint of the data type being read to circumvent the issue with empty elements being read as a header/footer pair
 	 * @param reader the reader to read the XML data from
 	 * @param readFirst true to read whatever element occurs first in the input stream
 	 * @param elmType the type of element to read (only used if {@code readFirst} is false)
@@ -394,13 +394,7 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 	 * @param elementName the name of the element to read, only applies if {@code matchName} is true
 	 * @throws XMLStreamException
 	 */
-	public XmlTag nextElement(XMLStreamReader reader, boolean readFirst, int elmType, boolean matchName,
-			String elementName) throws XMLStreamException {
-		return nextElement(null, reader, readFirst, elmType, matchName, elementName);
-	}
-
-
-	private XmlTag nextElement(ParsedElementType typeHint, XMLStreamReader reader, boolean readFirst, int elmType,
+	private DataElement nextElement(ParsedElementType typeHint, XMLStreamReader reader, boolean readFirst, int elmType,
 			boolean matchName, String elementName) throws XMLStreamException {
 		int curTag = reader.getEventType();
 		// read until an opening element is found
@@ -458,7 +452,7 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 				// move past current end element now that has been processed
 				reader.next();
 			}
-			return new XmlTagImpl(tagName, cachedContents, type);
+			return new DataElementImpl(tagName, -1, cachedContents, type);
 		}
 		// if we are reading a start block or element
 		else if(elmType == START_EL) {
@@ -478,7 +472,7 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 			contentsBldr.setLength(0);
 
 			if(nextElementType == ParsedElementType.HEADER || nextElementType == ParsedElementType.FOOTER) {
-				return new XmlTagImpl(tagName, cachedContents, ParsedElementType.HEADER);
+				return new DataElementImpl(tagName, -1, cachedContents, ParsedElementType.HEADER);
 			}
 			else if(nextElementType == ParsedElementType.ELEMENT) {
 				// move past element's end since we are processing an entire element
@@ -487,7 +481,7 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 			else {
 				throw new AssertionError("unknown " + nextElementType.getClass() + ": " + nextElementType);
 			}
-			return new XmlTagImpl(tagName, cachedContents, ParsedElementType.ELEMENT);
+			return new DataElementImpl(tagName, -1, cachedContents, ParsedElementType.ELEMENT);
 		}
 		// if we are reading a end block
 		else {
@@ -498,7 +492,7 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 			String tagName = reader.getLocalName();
 			cachedContents = null;
 			reader.next();
-			return new XmlTagImpl(tagName, cachedContents, ParsedElementType.FOOTER);
+			return new DataElementImpl(tagName, -1, cachedContents, ParsedElementType.FOOTER);
 		}
 	}
 
@@ -569,7 +563,7 @@ public class XmlInputReader implements XmlInput, DataTransferInput {
 
 
 	@Override
-	public XmlTag getCurrentElement() {
+	public DataElement getCurrentElement() {
 		return lastOpeningTag;
 	}
 

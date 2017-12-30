@@ -18,7 +18,7 @@ import twg2.io.serialize.base.writer.WritableObject;
 import twg2.io.serialize.json.JsonReader;
 import twg2.io.serialize.json.JsonWriter;
 import twg2.io.serialize.xml.XmlHandler;
-import twg2.text.stringUtils.StringEscape;
+import twg2.text.stringEscape.StringEscape;
 
 /** A set of static functions for creating {@link DataTransferInput} and {@link DataTransferOutput} streams
  * @author TeamworkGuy2

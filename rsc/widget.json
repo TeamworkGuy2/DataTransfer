@@ -1,0 +1,40 @@
+{
+  "Widget" : {
+    "name" : "Alpha",
+    "meta-data" : {
+      "type" : "java.lang.String",
+      "bool" : true
+    },
+    "id" : 42,
+    "count" : 4,
+    "subObjs" : {
+      "SubWidget" : {
+        "args" : {
+          "arg" : "A",
+          "arg" : "02",
+          "arg" : "C"
+        },
+        "description" : "first sub widget"
+      },
+      "SubWidget" : {
+        "args" : {
+          "arg" : "04",
+          "arg" : "E"
+        },
+        "description" : "special 2 item sub widget"
+      },
+      "SubWidget" : {
+        "args" : {
+          "arg" : "06",
+          "arg" : "G",
+          "arg" : "G6"
+        },
+        "description" : ""
+      },
+      "SubWidget" : {
+        "args" : { },
+        "description" : ""
+      }
+    }
+  }
+}

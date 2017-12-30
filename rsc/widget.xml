@@ -1,0 +1,39 @@
+<Widget>
+	<name>Alpha</name>
+	<meta-data>
+		<type>java.lang.String</type>
+		<bool>true</bool>
+	</meta-data>
+	<id>42</id>
+	<count>4</count>
+	<subObjs>
+		<SubWidget>
+			<args>
+				<arg>A</arg>
+				<arg>02</arg>
+				<arg>C</arg>
+			</args>
+			<description>first sub widget</description>
+		</SubWidget>
+		<SubWidget>
+			<args>
+				<arg>04</arg>
+				<arg>E</arg>
+			</args>
+			<description>special 2 item sub widget</description>
+		</SubWidget>
+		<SubWidget>
+			<args>
+				<arg>06</arg>
+				<arg>G</arg>
+				<arg>G6</arg>
+			</args>
+			<description></description>
+		</SubWidget>
+		<SubWidget>
+			<args>
+			</args>
+			<description></description>
+		</SubWidget>
+	</subObjs>
+</Widget>

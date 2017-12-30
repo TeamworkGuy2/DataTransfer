@@ -1,0 +1,13 @@
+{
+	"version" : "0.2.0",
+	"name" : "data-transfer",
+	"description" : "Read and write primitive and string values via simple interfaces that can be directed to JSON, XML, or other protocol streams.",
+	"homepage" : "https://github.com/TeamworkGuy2/DataTransfer",
+	"license" : "MIT",
+	"main" : "./bin/data_transfer.jar",
+	"dependencies" : {
+		"jackson-core": "~2.5.0",
+		"jsimple-types": "^0.5.1",
+		"jtext-util": "^0.8.0"
+	}
+}

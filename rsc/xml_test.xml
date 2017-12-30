@@ -1,0 +1,37 @@
+<body>
+	<arch>
+		<string>contents arch 1.1</string>
+		<vars></vars>
+		<entry>contents arch 1.2</entry>
+		<prim>
+			<integer>256</integer>
+			<float>4779.98</float>
+		</prim>
+	</arch>
+	<steps>true</steps>
+	<setting>V&lt;map&gt; upm, ul</setting>
+	<inter>
+		<inner>
+		</inner>
+		<interEntry>inter 1.1</interEntry>
+	</inter>
+	<loopCount>15</loopCount>
+	<loop>
+		<elem>element-0</elem>
+		<elem>element-1</elem>
+		<elem>element-2</elem>
+		<elem>element-3</elem>
+		<elem>element-4</elem>
+		<elem>element-5</elem>
+		<elem>element-6</elem>
+		<elem>element-7</elem>
+		<elem>element-8</elem>
+		<elem>element-9</elem>
+		<elem>element-10</elem>
+		<elem>element-11</elem>
+		<elem>element-12</elem>
+		<elem>element-13</elem>
+		<elem>element-14</elem>
+	</loop>
+	<loop2>[&quot;element-2-0&quot;, &quot;element-2-1&quot;, &quot;element-2-2&quot;, &quot;element-2-3&quot;, &quot;element-2-4&quot;, &quot;element-2-5&quot;, &quot;element-2-6&quot;, &quot;element-2-7&quot;, &quot;element-2-8&quot;, &quot;element-2-9&quot;, &quot;element-2-10&quot;, &quot;element-2-11&quot;, &quot;element-2-12&quot;, &quot;element-2-13&quot;, &quot;element-2-14&quot;]</loop2>
+</body>

@@ -28,6 +28,22 @@ public class Employee implements DataTransferable {
 
 
 	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((address == null) ? 0 : address.hashCode());
+		result = prime * result + ((cities == null) ? 0 : cities.hashCode());
+		result = prime * result + id;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = prime * result + (permanent ? 1231 : 1237);
+		result = prime * result + Arrays.hashCode(phoneNumbers);
+		result = prime * result + ((properties == null) ? 0 : properties.hashCode());
+		result = prime * result + ((role == null) ? 0 : role.hashCode());
+		return result;
+	}
+
+
+	@Override
 	public boolean equals(Object obj) {
 		if(!(obj instanceof Employee)) {
 			return false;
